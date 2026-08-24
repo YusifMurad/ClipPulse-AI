@@ -55,7 +55,10 @@ async function loadSettings() {
   try {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
-    if (data.api_key) document.getElementById("api-key-input").value = data.api_key;
+    // API key is never sent back — show masked version in placeholder
+    if (data.has_api_key) {
+      document.getElementById("api-key-input").placeholder = data.api_key_masked || "••••••••";
+    }
     if (data.clip_count) document.getElementById("clip-count-input").value = data.clip_count;
     if (data.whisper_model) document.getElementById("whisper-model").value = data.whisper_model;
     if (data.language) document.getElementById("subtitle-language").value = data.language;
@@ -97,7 +100,7 @@ async function checkApiKey() {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
     const notice = document.getElementById("api-key-notice");
-    notice.style.display = data.api_key ? "none" : "flex";
+    notice.style.display = data.has_api_key ? "none" : "flex";
   } catch {}
 }
 

@@ -1,10 +1,13 @@
 import os
 import uuid
 import json
+import time
 import threading
 import atexit
 import shutil
+import hashlib
 from pathlib import Path
+from functools import wraps
 
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
@@ -13,6 +16,25 @@ from pipeline import process_video, OUTPUT_DIR, recut_clip
 
 app = Flask(__name__)
 CORS(app)
+
+# --- Rate Limiting ---
+_rate_store = {}
+RATE_LIMIT = 30  # requests per minute per IP
+RATE_WINDOW = 60
+
+def rate_limit(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        ip = request.remote_addr
+        now = time.time()
+        if ip not in _rate_store:
+            _rate_store[ip] = []
+        _rate_store[ip] = [t for t in _rate_store[ip] if now - t < RATE_WINDOW]
+        if len(_rate_store[ip]) >= RATE_LIMIT:
+            return jsonify({"error": "Rate limit exceeded. Try again later."}), 429
+        _rate_store[ip].append(now)
+        return f(*args, **kwargs)
+    return wrapper
 
 # --- Temizlik ---
 def cleanup():
@@ -43,6 +65,7 @@ if _old_settings.exists() and not (CONFIG_DIR / "settings.json").exists():
 
 
 @app.route("/api/upload", methods=["POST"])
+@rate_limit
 def upload_file():
     """Save an uploaded video file and return its server-side path."""
     if "file" not in request.files:
@@ -76,6 +99,7 @@ def run_job(job_id, url, api_key, clip_count, local_file=None, whisper_model="ba
 
 
 @app.route("/api/process", methods=["POST"])
+@rate_limit
 def start_process():
     data = request.json
     url = data.get("url", "").strip()
@@ -194,22 +218,47 @@ def update_clip(job_id, filename):
         return jsonify({"error": str(e)}), 500
 
 @app.route("/api/settings", methods=["POST"])
+@rate_limit
 def save_settings():
     data = request.json
     settings_path = CONFIG_DIR / "settings.json"
     settings_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Load existing settings
+    existing = {}
+    if settings_path.exists():
+        with open(settings_path) as f:
+            existing = json.load(f)
+    
+    # If api_key field is empty, keep the existing one
+    if not data.get("api_key", "").strip():
+        data["api_key"] = existing.get("api_key", "")
+    else:
+        data["api_key"] = data["api_key"].strip()
+    
     with open(settings_path, "w") as f:
         json.dump(data, f)
     return jsonify({"ok": True})
 
 
 @app.route("/api/settings")
+@rate_limit
 def get_settings():
     settings_path = CONFIG_DIR / "settings.json"
     if settings_path.exists():
         with open(settings_path) as f:
-            return jsonify(json.load(f))
-    return jsonify({})
+            data = json.load(f)
+        # Mask the API key — never return it in full
+        if "api_key" in data and data["api_key"]:
+            key = data["api_key"]
+            data["api_key_masked"] = key[:6] + "..." + key[-4:] if len(key) > 10 else "***"
+            data["has_api_key"] = True
+        else:
+            data["api_key_masked"] = ""
+            data["has_api_key"] = False
+        data.pop("api_key", None)
+        return jsonify(data)
+    return jsonify({"has_api_key": False})
 
 
 FRONTEND_DIR = Path(__file__).parent.parent
