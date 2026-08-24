@@ -8,6 +8,8 @@ Takes long videos, finds the most engaging moments with AI, and turns them into 
 ![FFmpeg](https://img.shields.io/badge/FFmpeg-green?logo=ffmpeg)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
+![ClipPulse AI](https://github.com/user-attachments/assets/5ae92a0d-b851-48d2-a31d-a771aaf24488)
+
 ## Features
 
 - 🎯 **AI Clip Selection** — Finds viral moments automatically using Gemini AI
