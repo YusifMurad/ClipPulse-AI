@@ -55,9 +55,11 @@ async function loadSettings() {
   try {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
-    // API key is never sent back — show masked version in placeholder
+    // Show masked key so user knows it's saved (actual key never leaves server)
     if (data.has_api_key) {
-      document.getElementById("api-key-input").placeholder = data.api_key_masked || "••••••••";
+      const input = document.getElementById("api-key-input");
+      input.value = data.api_key_masked || "";
+      input.dataset.saved = "true";
     }
     if (data.clip_count) document.getElementById("clip-count-input").value = data.clip_count;
     if (data.whisper_model) document.getElementById("whisper-model").value = data.whisper_model;
@@ -67,16 +69,23 @@ async function loadSettings() {
 
 function setupSaveSettings() {
   document.getElementById("save-settings-btn").addEventListener("click", async () => {
-    const apiKey = document.getElementById("api-key-input").value.trim();
+    const apiKeyInput = document.getElementById("api-key-input").value.trim();
     const clipCount = parseInt(document.getElementById("clip-count-input").value) || 6;
     const whisperModel = document.getElementById("whisper-model").value;
     const language = document.getElementById("subtitle-language").value;
     const msg = document.getElementById("settings-msg");
+
+    // If input still shows masked text, don't overwrite the real key
+    const apiKey = (apiKeyInput && !apiKeyInput.includes("...")) ? apiKeyInput : "";
+
     try {
+      const body = { clip_count: clipCount, whisper_model: whisperModel, language: language };
+      if (apiKey) body.api_key = apiKey;
+
       const r = await fetch(API + "/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ api_key: apiKey, clip_count: clipCount, whisper_model: whisperModel, language: language }),
+        body: JSON.stringify(body),
       });
       if (!r.ok) throw new Error("HTTP " + r.status);
       msg.style.display = "block";
@@ -84,6 +93,7 @@ function setupSaveSettings() {
       msg.textContent = "Settings saved!";
       setTimeout(() => (msg.style.display = "none"), 2500);
       checkApiKey();
+      loadSettings();
     } catch (e) {
       msg.style.display = "block";
       msg.className = "settings-msg";

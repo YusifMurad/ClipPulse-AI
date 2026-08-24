@@ -23,9 +23,9 @@ def download_video(url, job_dir):
 
     # Different strategies to try in order
     strategies = [
-        ["--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "best"],
-        ["--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo+bestaudio"],
-        ["--remote-components", "ejs:github", "-f", "best"],
+        ["--impersonate", "chrome", "--remote-components", "ejs:github", "--extractor-args", "youtube:player_client=ios,web", "-f", "best"],
+        ["--impersonate", "chrome", "--remote-components", "ejs:github", "--extractor-args", "youtube:player_client=web_creator", "-f", "best"],
+        ["--impersonate", "chrome", "-f", "bestvideo+bestaudio/best"],
         ["-f", "best"],
     ]
 
