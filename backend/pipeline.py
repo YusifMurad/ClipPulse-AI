@@ -23,8 +23,8 @@ def download_video(url, job_dir):
 
     # Different strategies to try in order
     strategies = [
-        ["--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
-        ["--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
+        ["--js-runtimes", "deno:/home/yusif/.deno/bin/deno", "--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
+        ["--js-runtimes", "deno:/home/yusif/.deno/bin/deno", "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
         ["--impersonate", "chrome", "-f", "bestvideo+bestaudio/best"],
         ["-f", "bestvideo+bestaudio/best"],
     ]
@@ -39,6 +39,8 @@ def download_video(url, job_dir):
                 "--no-warnings",
                 "--no-check-certificates",
                 "--concurrent-fragments", "4",
+                "--socket-timeout", "30",
+                "--retries", "2",
                 "-o", output_template,
                 "--print", "after_move:filepath",
                 "--print", "title",
