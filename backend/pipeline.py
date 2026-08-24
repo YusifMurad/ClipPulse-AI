@@ -282,8 +282,20 @@ def fmt_srt_time(seconds):
 
 
 def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None):
-    """Cut clip, crop to 9:16, and burn (animated) subtitles."""
+    """Cut clip, crop to 9:16, burn (animated) subtitles, and create thumbnail."""
     duration = end - start
+
+    # Generate thumbnail (at 2s into the clip)
+    thumb_path = output_path.with_suffix(".jpg")
+    thumb_cmd = [
+        "ffmpeg", "-y",
+        "-ss", str(start + min(duration, 2)),
+        "-i", video_path,
+        "-vframes", "1",
+        "-q:v", "2",
+        str(thumb_path)
+    ]
+    subprocess.run(thumb_cmd, capture_output=True)
 
     if ass_content:
         # Use ASS for animated word-by-word subtitles

@@ -372,6 +372,7 @@ function showClips(data) {
     const card = document.createElement("div");
     card.className = "clip-card";
     const previewUrl = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
+    const thumbUrl = API + "/api/thumbnail/" + currentJobId + "/" + encodeURIComponent(clip.filename);
     const downloadUrl = API + "/api/download/" + currentJobId + "/" + encodeURIComponent(clip.filename);
 
     const startMin = Math.floor(clip.start / 60);
@@ -380,11 +381,15 @@ function showClips(data) {
     const endSec = Math.floor(clip.end % 60);
 
     const score = clip.viral_score || 0;
-    const scoreColor = score >= 80 ? "#1db954" : score >= 60 ? "#fbbf24" : "#ef4444";
+    const scoreColor = score >= 80 ? "#1db954" : score >= 60 ? "#ffc400" : "#ef4444";
 
     card.innerHTML = `
-      <video src="${previewUrl}" preload="metadata" muted loop></video>
+      <div class="clip-preview-container">
+        <video src="${previewUrl}" preload="metadata" muted poster="${thumbUrl}"></video>
+        <div class="play-overlay"><svg width="48" height="48" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
       <div class="clip-info">
+
         <div class="clip-header">
           <div class="clip-hook">${escapeHtml(clip.hook)}</div>
           <div class="clip-score" style="background:${scoreColor};">${score}</div>

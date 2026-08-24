@@ -580,6 +580,36 @@ body {
   aspect-ratio: 9/16;
   object-fit: cover;
   background: #000;
+  display: block;
+}
+
+.clip-preview-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9/16;
+  background: #000;
+  overflow: hidden;
+}
+
+.play-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.5);
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.clip-card:hover .play-overlay {
+  opacity: 1;
 }
 
 .clip-info {

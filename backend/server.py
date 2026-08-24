@@ -165,6 +165,18 @@ def preview_clip(job_id, filename):
     return send_file(str(file_path), mimetype="video/mp4")
 
 
+@app.route("/api/thumbnail/<job_id>/<filename>")
+def get_thumbnail(job_id, filename):
+    """Serve the thumbnail for a specific clip."""
+    job_dir = OUTPUT_DIR / job_id
+    # filename is like "01_Title.mp4", thumbnail is "01_Title.jpg"
+    thumb_name = Path(filename).with_suffix(".jpg")
+    file_path = job_dir / thumb_name
+    if not file_path.exists():
+        return jsonify({"error": "Thumbnail not found"}), 404
+    return send_file(str(file_path), mimetype="image/jpeg")
+
+
 @app.route("/api/clip_data/<job_id>/<filename>")
 def get_clip_data(job_id, filename):
     """Get clip ASS content and source video path."""
