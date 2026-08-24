@@ -8,3 +8,6 @@ dist/
 *.db
 config/
 styles.css.bak
+*.egg-info/
+.venv/
+deno/
