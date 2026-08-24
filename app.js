@@ -164,21 +164,21 @@ function setupFileInput() {
 }
 
 async function uploadAndProcess(file) {
-  let apiKey = "";
   let clipCount = 6;
   let whisperModel = "base";
   let language = "";
   try {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
-    apiKey = data.api_key || "";
+    if (!data.has_api_key) {
+      alert("Please add your Google Gemini API key in Settings.");
+      return;
+    }
     clipCount = data.clip_count || 6;
     whisperModel = data.whisper_model || "base";
     language = data.language || "";
-  } catch {}
-
-  if (!apiKey) {
-    alert("Please add your Google Gemini API key in Settings.");
+  } catch {
+    alert("Could not connect to server.");
     return;
   }
 
@@ -217,7 +217,7 @@ async function uploadAndProcess(file) {
     const r = await fetch(API + "/api/process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "", api_key: apiKey, clip_count: clipCount, local_file: serverPath, whisper_model: whisperModel, language: language }),
+      body: JSON.stringify({ url: "", clip_count: clipCount, local_file: serverPath, whisper_model: whisperModel, language: language }),
     });
     const data = await r.json();
     if (data.error) {
@@ -249,19 +249,19 @@ async function startProcessing() {
   const url = document.getElementById("url-input").value.trim();
   if (!url) return;
 
-  let apiKey = "";
   let clipCount = 6;
   let language = "";
   try {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
-    apiKey = data.api_key || "";
+    if (!data.has_api_key) {
+      alert("Please add your Google Gemini API key in Settings.");
+      return;
+    }
     clipCount = data.clip_count || 6;
     language = data.language || "";
-  } catch {}
-
-  if (!apiKey) {
-    alert("Please add your Google Gemini API key in Settings.");
+  } catch {
+    alert("Could not connect to server.");
     return;
   }
 
@@ -273,7 +273,7 @@ async function startProcessing() {
     const r = await fetch(API + "/api/process", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, api_key: apiKey, clip_count: clipCount, language: language }),
+      body: JSON.stringify({ url, clip_count: clipCount, language: language }),
     });
     const data = await r.json();
     currentJobId = data.job_id;

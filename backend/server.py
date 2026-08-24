@@ -54,14 +54,14 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 CONFIG_DIR = Path(__file__).parent / "config"
 CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
-# Migrate old settings if present (so API key isn't lost)
-_old_settings = OUTPUT_DIR / ".settings.json"
-if _old_settings.exists() and not (CONFIG_DIR / "settings.json").exists():
-    try:
-        shutil.copyfile(str(_old_settings), str(CONFIG_DIR / "settings.json"))
-        print("Eski ayarlar yeni konuma taşındı.")
-    except Exception as e:
-        print("Ayarlar taşınırken hata:", e)
+def load_api_key():
+    """Load API key from server-side config only — never from client."""
+    settings_path = CONFIG_DIR / "settings.json"
+    if settings_path.exists():
+        with open(settings_path) as f:
+            data = json.load(f)
+        return data.get("api_key", "")
+    return ""
 
 
 @app.route("/api/upload", methods=["POST"])
@@ -103,16 +103,17 @@ def run_job(job_id, url, api_key, clip_count, local_file=None, whisper_model="ba
 def start_process():
     data = request.json
     url = data.get("url", "").strip()
-    api_key = data.get("api_key", "").strip()
     clip_count = data.get("clip_count", 6)
     local_file = data.get("local_file", "").strip()
     whisper_model = data.get("whisper_model", "base")
     language = data.get("language", "").strip() or None
 
+    # API key comes from server config only — never from client
+    api_key = load_api_key()
     if not api_key:
-        return jsonify({"error": "API key is required"}), 400
+        return jsonify({"error": "No API key configured. Add one in Settings."}), 400
     if not url and not local_file:
-        return jsonify({"error": "URL veya dosya gerekli"}), 400
+        return jsonify({"error": "URL or file is required"}), 400
 
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {"status": "starting", "progress": 0}
