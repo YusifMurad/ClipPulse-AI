@@ -1,0 +1,14 @@
+{
+  "name": "clipforge",
+  "version": "1.0.0",
+  "description": "YouTube to viral clips converter",
+  "main": "electron/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron .",
+    "backend": "cd backend && pip3 install -r requirements.txt && python3 server.py"
+  },
+  "dependencies": {
+    "electron": "^33.4.11"
+  }
+}

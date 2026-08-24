@@ -1,0 +1,10 @@
+output/
+__pycache__/
+*.pyc
+venv/
+.env
+node_modules/
+dist/
+*.db
+config/
+styles.css.bak

@@ -1,0 +1,6 @@
+flask
+flask-cors
+yt-dlp
+faster-whisper
+google-genai
+curl_cffi==0.15.0
