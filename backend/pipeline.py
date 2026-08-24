@@ -23,10 +23,10 @@ def download_video(url, job_dir):
 
     # Different strategies to try in order
     strategies = [
-        ["--impersonate", "chrome", "--remote-components", "ejs:github", "--extractor-args", "youtube:player_client=ios,web", "-f", "best"],
-        ["--impersonate", "chrome", "--remote-components", "ejs:github", "--extractor-args", "youtube:player_client=web_creator", "-f", "best"],
+        ["--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
+        ["--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
         ["--impersonate", "chrome", "-f", "bestvideo+bestaudio/best"],
-        ["-f", "best"],
+        ["-f", "bestvideo+bestaudio/best"],
     ]
 
     last_err = None
@@ -38,6 +38,7 @@ def download_video(url, job_dir):
                 "--merge-output-format", "mp4",
                 "--no-warnings",
                 "--no-check-certificates",
+                "--concurrent-fragments", "4",
                 "-o", output_template,
                 "--print", "after_move:filepath",
                 "--print", "title",
@@ -45,7 +46,7 @@ def download_video(url, job_dir):
             ]
             proc = subprocess.run(
                 cmd, capture_output=True, text=True, timeout=600,
-                env={**os.environ, "PATH": f"/home/yusif/.deno/bin:{os.environ.get('PATH', '')}"}
+                env={**os.environ, "PATH": f"/home/yusif/.deno/bin:/usr/local/bin:/usr/bin:/bin:{os.environ.get('PATH', '')}"}
             )
             if proc.returncode == 0:
                 lines = proc.stdout.strip().split("\n")
