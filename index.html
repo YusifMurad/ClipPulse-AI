@@ -1,40 +1,51 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ClipPulse AI</title>
-    <link rel="stylesheet" href="styles.css?v=3" />
+    <title>ClipPulse AI — Viral Clip Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css?v=10" />
   </head>
   <body>
     <div id="app">
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-logo">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-            <rect x="2" y="2" width="20" height="20" rx="4" fill="#1DB954"/>
-            <path d="M8 7v10l8-5z" fill="#000"/>
-          </svg>
-          <span>ClipPulse AI</span>
+          <div class="logo-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+              <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#logo-grad)"/>
+              <path d="M9 7v10l8-5z" fill="#000" stroke="#000" stroke-width="0.5"/>
+              <defs><linearGradient id="logo-grad" x1="2" y1="2" x2="22" y2="22"><stop stop-color="#1DB954"/><stop offset="1" stop-color="#1ed760"/></linearGradient></defs>
+            </svg>
+          </div>
+          <div class="logo-text">
+            <span class="logo-name">ClipPulse</span>
+            <span class="logo-tag">AI</span>
+          </div>
         </div>
+
         <nav class="sidebar-nav">
           <button class="nav-btn active" data-view="home">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3z"/></svg>
-            Ana Sayfa
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span>Home</span>
           </button>
           <button class="nav-btn" data-view="history">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M13 3a9 9 0 00-9 9H1l4 4 4-4H6a7 7 0 0114 0h-2a5 5 0 00-10 0H3a9 9 0 0018 0h-2a7 7 0 01-14 0h2a5 5 0 0010 0z"/></svg>
-            İşleme Geçmişi
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>History</span>
           </button>
         </nav>
-        <div class="sidebar-settings">
+
+        <div class="sidebar-bottom">
           <button class="nav-btn" data-view="settings">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.6 3.6 0 0112 15.6z"/></svg>
-            Ayarlar
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            <span>Settings</span>
           </button>
-          <button id="cleanup-btn" class="nav-btn" style="color:#e22134;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19a2 2 0 002 2h8a2 2 0 002-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-            Disk Temizle
+          <button id="cleanup-btn" class="nav-btn nav-btn-danger">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            <span>Clean Disk</span>
           </button>
         </div>
       </aside>
@@ -44,42 +55,53 @@
         <!-- Home View -->
         <div id="view-home" class="view active">
           <div class="hero">
-            <h1>Video Kliplerini Oluştur</h1>
-            <p>Videonun en viral anlarını AI ile otomatik bul ve clip oluştur</p>
+            <div class="hero-badge">AI-Powered</div>
+            <h1>Create Viral Clips<br/><span class="hero-accent">in Seconds</span></h1>
+            <p>Paste a YouTube link or upload your video. AI finds the best moments and turns them into shareable clips.</p>
           </div>
 
           <div class="source-tabs">
-            <button class="source-tab active" data-source="url">YouTube Linki</button>
-            <button class="source-tab" data-source="file">Bilgisayarımdan MP4</button>
+            <button class="source-tab active" data-source="url">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              YouTube URL
+            </button>
+            <button class="source-tab" data-source="file">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload MP4
+            </button>
           </div>
 
-          <div class="search-box" id="source-url">
+          <div class="input-card" id="source-url">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" id="url-input" class="search-input" placeholder="https://youtube.com/watch?v=..." autocomplete="off" spellcheck="false" />
+              <input type="text" id="url-input" class="search-input" placeholder="Paste YouTube URL here..." autocomplete="off" spellcheck="false" />
               <button id="process-btn" class="btn-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                Clip Oluştur
+                Generate Clips
               </button>
             </div>
           </div>
 
-          <div class="search-box" id="source-file" style="display:none;">
+          <div class="input-card" id="source-file" style="display:none;">
             <div class="file-input-wrapper">
               <label for="file-input" class="file-drop" id="file-drop">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
-                <span id="file-label">MP4 dosyası seçmek için tıkla</span>
-                <input type="file" id="file-input" accept=".mp4,video/mp4,video/*" style="display:none;" />
+                <div class="file-drop-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
+                </div>
+                <span class="file-drop-title">Drop your video here</span>
+                <span class="file-drop-hint">or click to browse — MP4, MOV, AVI</span>
+                <input type="file" id="file-input" accept=".mp4,.mov,.avi,video/*" style="display:none;" />
               </label>
               <button id="process-file-btn" class="btn-primary" style="width:100%;justify-content:center;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                Clip Oluştur
+                Generate Clips
               </button>
             </div>
           </div>
+
           <div id="api-key-notice" class="notice" style="display:none;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            <span>Ayarlar menüsünden Google Gemini API key girin</span>
+            <span>Add your Google Gemini API key in <strong>Settings</strong> to get started</span>
           </div>
 
           <!-- Processing Status -->
@@ -87,7 +109,7 @@
             <div class="progress-header">
               <div class="spinner"></div>
               <div>
-                <h3 id="progress-title">İşleniyor...</h3>
+                <h3 id="progress-title">Processing...</h3>
                 <p id="progress-detail"></p>
               </div>
             </div>
@@ -100,10 +122,10 @@
           <!-- Clips Result -->
           <div id="clips-section" class="clips-section" style="display:none;">
             <div class="clips-header">
-              <h2 id="clips-title">Oluşturulan Clip'ler</h2>
+              <h2 id="clips-title">Generated Clips</h2>
               <button id="open-folder-btn" class="btn-secondary">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20 6h-8l-2-2H4a2 2 0 00-2 2v12a2 2 0 002 2h16a2 2 0 002-2V8a2 2 0 00-2-2z"/></svg>
-                Klasörü Aç
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                Open Folder
               </button>
             </div>
             <div id="clips-grid" class="clips-grid"></div>
@@ -112,57 +134,63 @@
 
         <!-- History View -->
         <div id="view-history" class="view" style="display:none;">
-          <h2>İşleme Geçmişi</h2>
+          <h2>Processing History</h2>
           <div id="history-list" class="history-list">
-            <p class="empty-state">Henüz işlenmiş video yok</p>
+            <div class="empty-state">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <p>No processed videos yet</p>
+            </div>
           </div>
         </div>
 
         <!-- Settings View -->
         <div id="view-settings" class="view" style="display:none;">
-          <h2>Ayarlar</h2>
+          <h2>Settings</h2>
           <div class="settings-form">
             <div class="setting-group">
               <label for="api-key-input">Google Gemini API Key</label>
               <input type="password" id="api-key-input" class="setting-input" placeholder="AIzaSy..." />
-              <p class="setting-hint">Ücretsiz: <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a></p>
+              <p class="setting-hint">Free tier available — <a href="https://aistudio.google.com/apikey" target="_blank">Get your key here</a></p>
             </div>
             <div class="setting-group">
-              <label for="clip-count-input">Clip Sayısı</label>
+              <label for="clip-count-input">Number of Clips</label>
               <input type="number" id="clip-count-input" class="setting-input" value="6" min="1" max="15" />
-              <p class="setting-hint">Her videodan oluşturulacak clip sayısı (1-15)</p>
+              <p class="setting-hint">How many clips to generate per video (1–15)</p>
             </div>
             <div class="setting-group">
-              <label for="whisper-model">Whisper Modeli</label>
+              <label for="whisper-model">Whisper Model</label>
               <select id="whisper-model" class="setting-input">
-                <option value="tiny">tiny (hızlı, daha az doğru)</option>
-                <option value="base" selected>base (dengeli)</option>
-                <option value="small">small (daha doğru, yavaş)</option>
+                <option value="tiny">tiny — Fast, less accurate</option>
+                <option value="base" selected>base — Balanced</option>
+                <option value="small">small — Accurate, slower</option>
               </select>
-              <p class="setting-hint">İlk kullanımda model otomatik indirilir</p>
+              <p class="setting-hint">Model downloads automatically on first use</p>
             </div>
             <div class="setting-group">
-              <label for="subtitle-language">Altyazı / Konuşma Dili</label>
+              <label for="subtitle-language">Language</label>
               <select id="subtitle-language" class="setting-input">
-                <option value="">Otomatik tespit</option>
-                <option value="tr">Türkçe</option>
-                <option value="en">İngilizce</option>
-                <option value="de">Almanca</option>
-                <option value="fr">Fransızca</option>
-                <option value="es">İspanyolca</option>
-                <option value="it">İtalyanca</option>
-                <option value="pt">Portekizce</option>
-                <option value="ru">Rusça</option>
-                <option value="ar">Arapça</option>
-                <option value="ja">Japonca</option>
-                <option value="ko">Korece</option>
-                <option value="zh">Çince</option>
-                <option value="hi">Hintçe</option>
-                <option value="nl">Hollandaca</option>
+                <option value="">Auto-detect</option>
+                <option value="en">English</option>
+                <option value="tr">Turkish</option>
+                <option value="de">German</option>
+                <option value="fr">French</option>
+                <option value="es">Spanish</option>
+                <option value="it">Italian</option>
+                <option value="pt">Portuguese</option>
+                <option value="ru">Russian</option>
+                <option value="ar">Arabic</option>
+                <option value="ja">Japanese</option>
+                <option value="ko">Korean</option>
+                <option value="zh">Chinese</option>
+                <option value="hi">Hindi</option>
+                <option value="nl">Dutch</option>
               </select>
-              <p class="setting-hint">Dili seçersen işlem daha hızlı olur (otomatik tespit atlanır)</p>
+              <p class="setting-hint">Setting a language skips detection and speeds up processing</p>
             </div>
-            <button id="save-settings-btn" class="btn-primary" style="margin-top:12px;">Kaydet</button>
+            <button id="save-settings-btn" class="btn-primary" style="margin-top:8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Settings
+            </button>
             <div id="settings-msg" class="settings-msg" style="display:none;"></div>
           </div>
         </div>
@@ -171,36 +199,42 @@
 
     <!-- Clip Editor Modal -->
     <div id="editor-modal" class="modal" style="display:none;">
+      <div class="modal-overlay"></div>
       <div class="modal-content">
         <div class="modal-header">
-          <h2 id="editor-title">Klip Düzenleyici</h2>
-          <button id="close-editor-btn" class="close-btn">&times;</button>
+          <h2 id="editor-title">Edit Clip</h2>
+          <button id="close-editor-btn" class="close-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
         </div>
         <div class="editor-body">
           <div class="editor-left">
             <video id="editor-video" controls></video>
             <div class="time-inputs">
               <div class="time-group">
-                <label>Başlangıç (sn)</label>
+                <label>Start (sec)</label>
                 <input type="number" id="editor-start" step="0.1" min="0" />
               </div>
               <div class="time-group">
-                <label>Bitiş (sn)</label>
+                <label>End (sec)</label>
                 <input type="number" id="editor-end" step="0.1" min="0" />
               </div>
             </div>
           </div>
           <div class="editor-right">
-            <h3>Altyazılar (ASS)</h3>
+            <h3>Subtitles (ASS)</h3>
             <textarea id="editor-ass" spellcheck="false"></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button id="save-clip-btn" class="btn-primary">Değişiklikleri Kaydet ve Yeniden İşle</button>
+          <button id="save-clip-btn" class="btn-primary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save & Re-render
+          </button>
         </div>
       </div>
     </div>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=10"></script>
   </body>
 </html>

@@ -19,13 +19,13 @@ function setupCleanup() {
   const btn = document.getElementById("cleanup-btn");
   if (btn) {
     btn.addEventListener("click", async () => {
-      if (!confirm("Tüm indirilen videolar ve oluşturulan klipler silinecek. Emin misiniz?")) return;
+      if (!confirm("All downloaded videos and generated clips will be deleted. Continue?")) return;
       try {
         await fetch(API + "/api/cleanup", { method: "POST" });
-        alert("Disk temizlendi!");
+        alert("Disk cleaned successfully!");
         location.reload();
       } catch (e) {
-        alert("Temizlik hatası: " + e.message);
+        alert("Cleanup error: " + e.message);
       }
     });
   }
@@ -78,16 +78,16 @@ function setupSaveSettings() {
       if (!r.ok) throw new Error("HTTP " + r.status);
       msg.style.display = "block";
       msg.className = "settings-msg success";
-      msg.textContent = "Kaydedildi!";
+      msg.textContent = "Settings saved!";
       setTimeout(() => (msg.style.display = "none"), 2500);
       checkApiKey();
     } catch (e) {
       msg.style.display = "block";
       msg.className = "settings-msg";
-      msg.style.background = "rgba(226,33,52,0.15)";
-      msg.style.color = "#e22134";
-      msg.style.border = "1px solid rgba(226,33,52,0.3)";
-      msg.textContent = "Kaydetme hatası: " + e.message;
+      msg.style.background = "rgba(239,68,68,0.12)";
+      msg.style.color = "#ef4444";
+      msg.style.border = "1px solid rgba(239,68,68,0.2)";
+      msg.textContent = "Error: " + e.message;
     }
   });
 }
@@ -116,17 +116,44 @@ function setupSourceTabs() {
 
 function setupFileInput() {
   const fileInput = document.getElementById("file-input");
-  const label = document.getElementById("file-label");
+  const drop = document.getElementById("file-drop");
+  const title = drop.querySelector(".file-drop-title");
+  const hint = drop.querySelector(".file-drop-hint");
 
   fileInput.addEventListener("change", () => {
     if (fileInput.files && fileInput.files[0]) {
-      label.textContent = fileInput.files[0].name + " (yüklemeye hazır)";
+      title.textContent = fileInput.files[0].name;
+      hint.textContent = "Ready to process";
+    }
+  });
+
+  // Drag and drop
+  ["dragover", "dragenter"].forEach(e => {
+    drop.addEventListener(e, (ev) => {
+      ev.preventDefault();
+      drop.style.borderColor = "var(--accent)";
+      drop.style.background = "var(--accent-glow)";
+    });
+  });
+  ["dragleave", "drop"].forEach(e => {
+    drop.addEventListener(e, (ev) => {
+      ev.preventDefault();
+      drop.style.borderColor = "";
+      drop.style.background = "";
+    });
+  });
+  drop.addEventListener("drop", (ev) => {
+    const files = ev.dataTransfer.files;
+    if (files.length && files[0].type.startsWith("video/")) {
+      fileInput.files = files;
+      title.textContent = files[0].name;
+      hint.textContent = "Ready to process";
     }
   });
 
   document.getElementById("process-file-btn").addEventListener("click", () => {
     if (!fileInput.files || !fileInput.files[0]) {
-      alert("Lütfen önce bir MP4 dosyası seçin.");
+      alert("Please select a video file first.");
       return;
     }
     uploadAndProcess(fileInput.files[0]);
@@ -148,13 +175,13 @@ async function uploadAndProcess(file) {
   } catch {}
 
   if (!apiKey) {
-    alert("Lütfen Ayarlar menüsünden Google Gemini API key girin.");
+    alert("Please add your Google Gemini API key in Settings.");
     return;
   }
 
   const btn = document.getElementById("process-file-btn");
   btn.disabled = true;
-  btn.textContent = "Dosya yükleniyor...";
+  btn.textContent = "Uploading...";
 
   // Step 1: upload file to server
   let serverPath;
@@ -164,25 +191,25 @@ async function uploadAndProcess(file) {
     const up = await fetch(API + "/api/upload", { method: "POST", body: fd });
     if (!up.ok) {
       const errText = await up.text();
-      throw new Error("Sunucu hatası: " + errText);
+      throw new Error("Server error: " + errText);
     }
     const upData = await up.json();
     if (upData.error) {
-      alert("Yükleme hatası: " + upData.error);
+      alert("Upload error: " + upData.error);
       btn.disabled = false;
-      btn.textContent = "Clip Oluştur";
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
       return;
     }
     serverPath = upData.path;
   } catch (e) {
-    alert("Yükleme hatası: " + e.message);
+    alert("Upload error: " + e.message);
     btn.disabled = false;
-    btn.textContent = "Clip Oluştur";
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
     return;
   }
 
   // Step 2: process uploaded file
-  btn.textContent = "İşleniyor...";
+  btn.textContent = "Processing...";
   try {
     const r = await fetch(API + "/api/process", {
       method: "POST",
@@ -191,64 +218,18 @@ async function uploadAndProcess(file) {
     });
     const data = await r.json();
     if (data.error) {
-      alert("Hata: " + data.error);
+      alert("Error: " + data.error);
       btn.disabled = false;
-      btn.textContent = "Clip Oluştur";
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
       return;
     }
     currentJobId = data.job_id;
     showProgress();
     pollStatus();
   } catch (e) {
-    alert("Bağlantı hatası: " + e.message);
+    alert("Connection error: " + e.message);
     btn.disabled = false;
-    btn.textContent = "Clip Oluştur";
-  }
-}
-
-async function startFileProcessing(filePath) {
-  let apiKey = "";
-  let clipCount = 6;
-  let whisperModel = "base";
-  let language = "";
-  try {
-    const r = await fetch(API + "/api/settings");
-    const data = await r.json();
-    apiKey = data.api_key || "";
-    clipCount = data.clip_count || 6;
-    whisperModel = data.whisper_model || "base";
-    language = data.language || "";
-  } catch {}
-
-  if (!apiKey) {
-    alert("Lütfen Ayarlar menüsünden Google Gemini API key girin.");
-    return;
-  }
-
-  const btn = document.getElementById("process-file-btn");
-  btn.disabled = true;
-  btn.textContent = "Başlatılıyor...";
-
-  try {
-    const r = await fetch(API + "/api/process", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url: "", api_key: apiKey, clip_count: clipCount, local_file: filePath, whisper_model: whisperModel, language: language }),
-    });
-    const data = await r.json();
-    if (data.error) {
-      alert("Hata: " + data.error);
-      btn.disabled = false;
-      btn.textContent = "Clip Oluştur";
-      return;
-    }
-    currentJobId = data.job_id;
-    showProgress();
-    pollStatus();
-  } catch (e) {
-    alert("Bağlantı hatası: " + e.message);
-    btn.disabled = false;
-    btn.textContent = "Clip Oluştur";
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
   }
 }
 
@@ -277,13 +258,13 @@ async function startProcessing() {
   } catch {}
 
   if (!apiKey) {
-    alert("Lütfen Ayarlar menüsünden Google Gemini API key girin.");
+    alert("Please add your Google Gemini API key in Settings.");
     return;
   }
 
   const btn = document.getElementById("process-btn");
   btn.disabled = true;
-  btn.textContent = "Başlatılıyor...";
+  btn.textContent = "Starting...";
 
   try {
     const r = await fetch(API + "/api/process", {
@@ -296,9 +277,9 @@ async function startProcessing() {
     showProgress();
     pollStatus();
   } catch (e) {
-    alert("Bağlantı hatası: " + e.message);
+    alert("Connection error: " + e.message);
     btn.disabled = false;
-    btn.textContent = "Clip Oluştur";
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
   }
 }
 
@@ -308,16 +289,16 @@ function showProgress() {
 }
 
 const STATUS_LABELS = {
-  starting: "Başlatılıyor...",
-  downloading: "Video indiriliyor...",
-  downloaded: "Video indirildi, transkripsiyon başlıyor...",
-  transcribing: "Video transkript ediliyor...",
-  transcribed: "Transkript hazır, AI analiz ediyor...",
-  analyzing: "AI en iyi anları buluyor...",
-  moments_found: "Anlar bulundu, clip'ler kesiliyor...",
-  cutting_clip: "Clip kesiliyor...",
-  done: "Tamamlandı!",
-  error: "Hata oluştu!",
+  starting: "Initializing...",
+  downloading: "Downloading video...",
+  downloaded: "Download complete, starting transcription...",
+  transcribing: "Transcribing audio...",
+  transcribed: "Transcription ready, AI analyzing...",
+  analyzing: "AI finding best moments...",
+  moments_found: "Moments found, cutting clips...",
+  cutting_clip: "Cutting clip...",
+  done: "Done!",
+  error: "An error occurred",
 };
 
 function pollStatus() {
@@ -332,11 +313,11 @@ function pollStatus() {
         pollInterval = null;
         document.getElementById("process-btn").disabled = false;
         document.getElementById("process-btn").innerHTML =
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Clip Oluştur';
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
         const fbtn = document.getElementById("process-file-btn");
-        if (fbtn) { fbtn.disabled = false; fbtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Clip Oluştur'; }
+        if (fbtn) { fbtn.disabled = false; fbtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips'; }
         if (data.status === "done") showClips(data);
-        else alert("Hata: " + (data.error || "Bilinmeyen hata"));
+        else alert("Error: " + (data.error || "Unknown error"));
       }
     } catch {}
   }, 1000);
@@ -351,9 +332,9 @@ function updateProgress(data) {
   title.textContent = STATUS_LABELS[data.status] || data.status;
   if (data.title) detail.textContent = data.title;
   else if (data.clip_index !== undefined)
-    detail.textContent = `Clip ${data.clip_index + 1}/${data.total} kesiliyor...`;
-  else if (data.segment_count) detail.textContent = `${data.segment_count} segment bulundu`;
-  else if (data.count) detail.textContent = `${data.count} clip anı tespit edildi`;
+    detail.textContent = `Cutting clip ${data.clip_index + 1}/${data.total}...`;
+  else if (data.segment_count) detail.textContent = `${data.segment_count} segments found`;
+  else if (data.count) detail.textContent = `${data.count} clip moments detected`;
   else detail.textContent = "";
 
   const progress = data.progress || 0;
@@ -364,7 +345,7 @@ function updateProgress(data) {
 function showClips(data) {
   document.getElementById("progress-section").style.display = "none";
   document.getElementById("clips-section").style.display = "block";
-  document.getElementById("clips-title").textContent = (data.result?.title || "Video") + " — Clip'ler";
+  document.getElementById("clips-title").textContent = (data.result?.title || "Video") + " — Clips";
 
   const result = data.result || data;
   const clips = result.clips || [];
@@ -386,23 +367,40 @@ function showClips(data) {
     const endSec = Math.floor(clip.end % 60);
 
     const score = clip.viral_score || 0;
-    const scoreColor = score >= 80 ? "#1db954" : score >= 60 ? "#ffc400" : "#e22134";
+    const scoreColor = score >= 80 ? "#1db954" : score >= 60 ? "#fbbf24" : "#ef4444";
 
     card.innerHTML = `
-      <video src="${previewUrl}" preload="metadata" muted></video>
+      <video src="${previewUrl}" preload="metadata" muted loop></video>
       <div class="clip-info">
         <div class="clip-header">
           <div class="clip-hook">${escapeHtml(clip.hook)}</div>
           <div class="clip-score" style="background:${scoreColor};">${score}</div>
         </div>
-        <div class="clip-reason">${escapeHtml(clip.reason)} (${startMin}:${String(startSec).padStart(2,"0")} - ${endMin}:${String(endSec).padStart(2,"0")})</div>
+        <div class="clip-reason">${escapeHtml(clip.reason)} (${startMin}:${String(startSec).padStart(2,"0")} — ${endMin}:${String(endSec).padStart(2,"0")})</div>
         <div class="clip-actions">
-          <button onclick="playClip(this)">Oynat</button>
-          <button class="btn-edit" onclick='openEditor(${JSON.stringify(clip).replace(/'/g, "&apos;")})'>Düzenle</button>
-          <a href="${downloadUrl}" download style="text-decoration:none;"><button>İndir</button></a>
+          <button onclick="playClip(this)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            Play
+          </button>
+          <button class="btn-edit" onclick='openEditor(${JSON.stringify(clip).replace(/'/g, "&apos;")})'>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <a href="${downloadUrl}" download style="text-decoration:none;">
+            <button>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </button>
+          </a>
         </div>
       </div>
     `;
+
+    // Hover play preview
+    const video = card.querySelector("video");
+    card.addEventListener("mouseenter", () => { video.play().catch(() => {}); });
+    card.addEventListener("mouseleave", () => { video.pause(); video.currentTime = 0; video.muted = true; });
+
     grid.appendChild(card);
   });
 
@@ -410,7 +408,7 @@ function showClips(data) {
     if (window.electronAPI) {
       window.electronAPI.openFolder(jobDir);
     } else {
-      alert("Klasör yolu: " + jobDir);
+      alert("Folder: " + jobDir);
     }
   };
 }
@@ -419,13 +417,14 @@ function playClip(btn) {
   const card = btn.closest(".clip-card");
   const video = card.querySelector("video");
   video.muted = false;
+  video.loop = false;
   video.play();
-  btn.textContent = "Duraklat";
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause';
   btn.onclick = () => {
     video.pause();
     video.muted = true;
     video.currentTime = 0;
-    btn.textContent = "Oynat";
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Play';
     btn.onclick = () => playClip(btn);
   };
 }
@@ -436,7 +435,11 @@ let jobHistory = [];
 function loadHistory() {
   const list = document.getElementById("history-list");
   if (jobHistory.length === 0) {
-    list.innerHTML = '<p class="empty-state">Henüz işlenmiş video yok</p>';
+    list.innerHTML = `
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <p>No processed videos yet</p>
+      </div>`;
     return;
   }
   list.innerHTML = "";
@@ -444,10 +447,10 @@ function loadHistory() {
     const item = document.createElement("div");
     item.className = "history-item";
     item.innerHTML = `
-      <div class="history-thumb"><svg width="24" height="24" viewBox="0 0 24 24" fill="var(--text-muted)"><path d="M8 5v14l11-7z"/></svg></div>
+      <div class="history-thumb"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><path d="M8 5v14l11-7z"/></svg></div>
       <div class="history-info">
         <div class="history-title">${escapeHtml(j.title || "Video")}</div>
-        <div class="history-meta">${j.clipCount || 0} clip oluşturuldu</div>
+        <div class="history-meta">${j.clipCount || 0} clips generated</div>
       </div>
     `;
     list.appendChild(item);
@@ -473,7 +476,7 @@ function openEditor(clip) {
   const assArea = document.getElementById("editor-ass");
   const title = document.getElementById("editor-title");
   
-  title.textContent = `Düzenle: ${clip.hook}`;
+  title.textContent = `Edit: ${clip.hook}`;
   startInput.value = clip.start;
   endInput.value = clip.end;
   
@@ -487,7 +490,7 @@ function openEditor(clip) {
     .then(data => {
       assArea.value = data.ass_content || "";
     })
-    .catch(() => { assArea.value = "ASS yüklenemedi."; });
+    .catch(() => { assArea.value = "Could not load subtitles."; });
     
   modal.style.display = "block";
 }
@@ -496,12 +499,17 @@ function setupEditor() {
   document.getElementById("close-editor-btn").onclick = () => {
     document.getElementById("editor-modal").style.display = "none";
   };
+
+  // Close on overlay click
+  document.querySelector(".modal-overlay")?.addEventListener("click", () => {
+    document.getElementById("editor-modal").style.display = "none";
+  });
   
   document.getElementById("save-clip-btn").onclick = async () => {
     if (!currentEditingClip) return;
     const btn = document.getElementById("save-clip-btn");
     btn.disabled = true;
-    btn.textContent = "İşleniyor...";
+    btn.textContent = "Re-rendering...";
     
     try {
       const r = await fetch(API + "/api/update_clip/" + currentJobId + "/" + encodeURIComponent(currentEditingClip.filename), {
@@ -515,10 +523,9 @@ function setupEditor() {
       });
       const data = await r.json();
       if (data.ok) {
-        alert("Klip güncellendi!");
         document.getElementById("editor-modal").style.display = "none";
         
-        // Sayfayı yenilemeden sadece düzenlenen videoyu güncelliyoruz
+        // Update the video in the grid without reloading
         const cards = document.querySelectorAll(".clip-card");
         cards.forEach(card => {
           const video = card.querySelector("video");
@@ -528,13 +535,13 @@ function setupEditor() {
           }
         });
       } else {
-        alert("Hata: " + data.error);
+        alert("Error: " + data.error);
       }
     } catch (e) {
-      alert("Kaydetme hatası: " + e.message);
+      alert("Save error: " + e.message);
     }
     
     btn.disabled = false;
-    btn.textContent = "Değişiklikleri Kaydet ve Yeniden İşle";
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save & Re-render';
   };
 }
