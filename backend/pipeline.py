@@ -405,6 +405,6 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
 
     except Exception as e:
         tb = traceback.format_exc()
-        print(f"[ClipForge ERROR] {e}\n{tb}")
+        print(f"[ClipPulse ERROR] {e}\n{tb}")
         emit("error", error=str(e))
         return {"status": "error", "error": str(e)}

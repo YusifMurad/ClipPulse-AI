@@ -237,5 +237,5 @@ def manual_cleanup():
 
 
 if __name__ == "__main__":
-    print("ClipForge starting on http://localhost:5555")
+    print("ClipPulse starting on http://localhost:5555")
     app.run(host="0.0.0.0", port=5555, debug=False)

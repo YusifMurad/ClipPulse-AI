@@ -1,5 +1,5 @@
 """
-ClipForge API Satış Sistemi
+ClipPulse AI API Satış Sistemi
 - API key ile kimlik doğrulama
 - Ücretsiz/Sınırsız plan
 - Kullanım takibi

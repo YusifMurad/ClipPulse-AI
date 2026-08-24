@@ -1,4 +1,4 @@
-# ClipForge 🎬
+# ClipPulse AI 🎬
 
 AI destekli video klip editörü. YouTube videolarından veya yerel MP4 dosyalarından, en viral anları otomatik bulup 9:16 dikey formatlarda.animasyonlu altyazılı klipler oluşturur.
 
