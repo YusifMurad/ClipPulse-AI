@@ -226,6 +226,7 @@ ScaledBorderAndShadow: yes
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 Style: Word, Arial, 74, &H00FFFFFF, &H00FFFFFF, &H00000000, &H00000000, 1, 0, 0, 0, 100, 100, 0, 0, 1, 4, 2, 2, 60, 60, 100, 1
+WrapStyle: 1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -239,7 +240,6 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             continue
         words = seg.get("words") or []
         if not words:
-            # Fallback: whole segment as one event
             clipped_start = max(0, seg_start - start_offset)
             clipped_end = min(end_offset - start_offset, seg_end - start_offset)
             if clipped_end <= clipped_start:
@@ -248,26 +248,27 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             events.append(f"Dialogue: 0,{fmt_ass_time(clipped_start)},{fmt_ass_time(clipped_end)},Word,,0,0,0,,{text}")
             continue
 
-        line_parts = []
+        line_text_words = []
         for w in words:
             w_start = max(0, w["start"] - start_offset)
             w_end = min(end_offset - start_offset, w["end"] - start_offset)
             if w_end <= w_start:
                 continue
-            # Animation: white -> bright yellow over word duration
             word_text = (
                 f"{{\\1c&HFFFFFF&\\t({w_start:.2f},{w_end:.2f},\\1c&H00FFFF&)}}{w['word'].strip()}"
             )
-            line_parts.append(word_text)
+            line_text_words.append(word_text)
 
-        if not line_parts:
+        if not line_text_words:
             continue
 
+        # Join all words in the segment into one dialogue line with wrapping
+        text = " ".join(line_text_words)
         clipped_start = max(0, seg_start - start_offset)
         clipped_end = min(end_offset - start_offset, seg_end - start_offset)
         if clipped_end <= clipped_start:
             continue
-        text = " ".join(line_parts)
+            
         events.append(f"Dialogue: 0,{fmt_ass_time(clipped_start)},{fmt_ass_time(clipped_end)},Word,,0,0,0,,{text}")
 
     return header + "\n".join(events)
@@ -302,6 +303,7 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None)
         sub_path = str(output_path) + ".ass"
         with open(sub_path, "w", encoding="utf-8") as f:
             f.write(ass_content)
+        # Force styles: WrapStyle=1 (smart wrapping), MarginV (bottom position)
         sub_filter = f"ass={sub_path.replace('\\', '/')}"
     else:
         # Fallback to plain SRT
@@ -352,6 +354,7 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content):
         f.write(new_ass_content)
     
     # Re-cut the video
+    # Note: start/end are relative to the ORIGINAL source video
     cut_clip(video_path, start, end, None, clip_output, ass_content=new_ass_content)
     return True
 
