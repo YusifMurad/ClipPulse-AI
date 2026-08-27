@@ -36,12 +36,36 @@ def rate_limit(f):
         return f(*args, **kwargs)
     return wrapper
 
+# --- Kalıcılık (persist) ---
+# Outputs are kept across restarts; results are mirrored to disk so editing
+# metadata survives a server restart.
+def persist_job(job_id):
+    try:
+        job = jobs.get(job_id)
+        if not job:
+            return
+        path = OUTPUT_DIR / job_id / "_result.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(job, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
+def load_persisted(job_id):
+    """Load a finished job's result from disk if it's not in memory."""
+    if job_id in jobs:
+        return True
+    path = OUTPUT_DIR / job_id / "_result.json"
+    if path.exists():
+        try:
+            jobs[job_id] = json.loads(path.read_text(encoding="utf-8"))
+            return True
+        except Exception:
+            pass
+    return False
+
 # --- Temizlik ---
 def cleanup():
-    print("Sunucu kapanıyor, output dizini temizleniyor...")
-    if OUTPUT_DIR.exists():
-        shutil.rmtree(OUTPUT_DIR)
-        OUTPUT_DIR.mkdir()
+    print("Sunucu kapanıyor.")
 
 atexit.register(cleanup)
 # ----------------
@@ -96,6 +120,7 @@ def run_job(job_id, url, api_key, clip_count, local_file=None, whisper_model="ba
                            local_file=local_file, whisper_model=whisper_model, language=language)
     jobs[job_id]["result"] = result
     jobs[job_id]["status"] = result.get("status", "done")
+    persist_job(job_id)
 
 
 @app.route("/api/process", methods=["POST"])
@@ -127,10 +152,9 @@ def start_process():
 
 @app.route("/api/status/<job_id>")
 def get_status(job_id):
-    job = jobs.get(job_id)
-    if not job:
+    if not load_persisted(job_id):
         return jsonify({"error": "Job not found"}), 404
-    return jsonify(job)
+    return jsonify(jobs[job_id])
 
 
 @app.route("/api/jobs")
@@ -143,6 +167,7 @@ def list_clips(job_id):
     job_dir = OUTPUT_DIR / job_id
     if not job_dir.exists():
         return jsonify({"error": "Job not found"}), 404
+    load_persisted(job_id)
     result = jobs.get(job_id, {}).get("result", {})
     return jsonify(result)
 
@@ -235,7 +260,8 @@ def get_clip_data(job_id, filename):
         except (IndexError, ValueError):
             current_style = {}
 
-    # Get clip metadata from jobs dict
+    # Get clip metadata from jobs dict (load from disk if restarted)
+    load_persisted(job_id)
     job_data = jobs.get(job_id, {}).get("result", {})
     clip_meta = next((c for c in job_data.get("clips", []) if c["filename"] == filename), {})
 
@@ -245,6 +271,7 @@ def get_clip_data(job_id, filename):
         "ass_content": ass_content,
         "plain_text": plain_text,
         "current_style": current_style,
+        "effect": clip_meta.get("effect", "none"),
         "start": clip_meta.get("start", 0),
         "end": clip_meta.get("end", 0),
         "hook": clip_meta.get("hook", "")
@@ -252,19 +279,21 @@ def get_clip_data(job_id, filename):
 
 @app.route("/api/update_clip/<job_id>/<filename>", methods=["POST"])
 def update_clip(job_id, filename):
-    """Update clip with new timings and subtitles."""
+    """Update clip with new timings, cut-out regions, style and subtitles."""
     data = request.json
     job_dir = OUTPUT_DIR / job_id
     if not job_dir.exists():
         return jsonify({"error": "Job not found"}), 404
-        
+
     source = list(job_dir.glob("source.*"))
     if not source:
         return jsonify({"error": "Source video not found"}), 404
-        
+
     start = float(data.get("start", 0))
     end = float(data.get("end", 0))
     ass_content = data.get("ass_content", "")
+    effect = data.get("effect", "none")
+    cuts = data.get("cuts") or []
 
     # If a new caption + style is provided, regenerate the ASS from the transcript
     text = data.get("text")
@@ -276,7 +305,17 @@ def update_clip(job_id, filename):
             return jsonify({"error": "Subtitle rebuild failed: " + str(e)}), 500
 
     try:
-        recut_clip(str(source[0]), job_dir, filename, start, end, ass_content)
+        recut_clip(str(source[0]), job_dir, filename, start, end, ass_content,
+                   effect=effect, cuts=cuts)
+        # Keep clip metadata in sync so re-editing shows correct bounds
+        job_data = jobs.get(job_id, {}).get("result", {})
+        for c in job_data.get("clips", []):
+            if c.get("filename") == filename:
+                c["start"] = start
+                c["end"] = end
+                c["effect"] = effect
+                break
+        persist_job(job_id)
         return jsonify({"ok": True, "message": "Clip updated"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

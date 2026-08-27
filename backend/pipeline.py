@@ -97,9 +97,27 @@ def build_transcript_text(segments):
     return "\n".join(lines)
 
 
-def find_moments_gemini(transcript_text, api_key, title="", num_clips=8):
+LANG_NAMES = {
+    "en": "English", "tr": "Turkish", "de": "German", "fr": "French",
+    "es": "Spanish", "it": "Italian", "pt": "Portuguese", "ru": "Russian",
+    "ar": "Arabic", "ja": "Japanese", "ko": "Korean", "zh": "Chinese",
+    "hi": "Hindi", "nl": "Dutch", "pl": "Polish", "sv": "Swedish",
+    "uk": "Ukrainian", "fa": "Persian", "id": "Indonesian", "vi": "Vietnamese",
+    "th": "Thai", "cs": "Czech", "el": "Greek",
+}
+
+
+def find_moments_gemini(transcript_text, api_key, title="", num_clips=8, language=None):
     """Ask Gemini to find the best viral moments using professional clip editing algorithm."""
     client = genai.Client(api_key=api_key)
+
+    lang_name = LANG_NAMES.get((language or "").lower(), language or "English")
+    lang_note = (
+        f"\nÇIKTI DİLİ: {lang_name}\n"
+        f"- \"hook_title\" ve \"reason\" alanlarını {lang_name} dilinde yaz.\n"
+        f"- \"hook_sentence\" ve \"closing_sentence\" transkriptten birebir alıntıdır; "
+        f"orijinal dillerinde (çeviri yapmadan) yaz."
+    )
 
     prompt = f"""Sen profesyonel bir video klip editörü AI'sın. Görevin uzun videoları, izleyiciyi en çok etkileyen viral kısa kliplere dönüştürmek.
 
@@ -107,10 +125,11 @@ Video başlığı: {title}
 
 Transkript (timestamp formatında [start-end]):
 {transcript_text}
+{lang_note}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ALGORİTMA — Aşağıdaki adımları eksiksiz uygula:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 BÖLÜM 1 — KONUŞMA ANALİZİ
 Her cümle için hesapla:
@@ -134,8 +153,8 @@ BÖLÜM 3 — VİRAL POTANSİYEL SKORU (0-100)
 Skoru 70'in üzerindeki klipleri önceliklendir.
 
 BÖLÜM 4 — ZOOM İN EFEKTİ (her klibin başına)
-• Süre: 0.5 saniye
-• Başlangıç scale: 1.08 → Bitiş: 1.00
+• Süre: 0.6 saniye
+• Başlangıç scale: 1.12 → Bitiş: 1.00
 • Easing: ease-out
 
 BÖLÜM 5 — ÇIKTI FORMATI
@@ -154,8 +173,8 @@ Return ONLY a JSON array (no markdown, no explanation) with objects like:
     "reason": "Bu klibi seçme gerekçen (1 cümle)",
     "zoom_in": {{
       "start": "0.0s",
-      "end": "0.5s",
-      "from_scale": 1.08,
+      "end": "0.6s",
+      "from_scale": 1.12,
       "to_scale": 1.00
     }}
   }}
@@ -165,6 +184,7 @@ Kurallar:
 - Timestamp'ler transcript'teki gerçek zamanlardan olmalı
 - Çeşitli anlar seç (hepsi aynı bölümde olmasın)
 - Her klip bağımsız olarak anlamlı olmalı
+- hook_title ve reason {lang_name} dilinde, hook_sentence/closing_sentence orijinal dilinde
 - Sadece JSON array döndür, başka bir şey yazma"""
 
     response = client.models.generate_content(
@@ -300,11 +320,12 @@ def build_ass_header(style):
     back = hex_to_ass(style.get("back", "#000000"))
     fontsize = int(style.get("fontsize", 74))
     bold = 1 if style.get("bold", True) else 0
-    outline_w = int(style.get("outline_w", 4))
-    shadow = int(style.get("shadow", 2))
+    outline_w = int(style.get("outline_w", 6))
+    shadow = int(style.get("shadow", 4))
     marginv = int(style.get("marginv", 100))
+    fontname = style.get("fontname", "Arial")
     style_line = (
-        f"Style: Word, Arial, {fontsize}, {primary}, {secondary}, {outline}, {back}, "
+        f"Style: Word, {fontname}, {fontsize}, {primary}, {secondary}, {outline}, {back}, "
         f"{bold}, 0, 0, 0, 100, 100, 0, 0, 1, {outline_w}, {shadow}, 2, 60, 60, {marginv}, 1"
     )
     return f"""[Script Info]
@@ -396,7 +417,85 @@ def fmt_srt_time(seconds):
     return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
 
 
-def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None):
+def _probe_fps(video_path):
+    try:
+        out = subprocess.run(
+            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+             "-show_entries", "stream=r_frame_rate", "-of", "default=nw=1:nk=1", video_path],
+            capture_output=True, text=True,
+        )
+        num, _, den = out.stdout.strip().partition("/")
+        n = float(num or 30)
+        d = float(den or 1)
+        return max(10.0, min(120.0, n / d if d else 30.0))
+    except Exception:
+        return 30.0
+
+
+def build_zoom_filter(effect, w, h, duration, fps):
+    """Return a ffmpeg zoompan filter string for the given effect (or '' for none)."""
+    if effect in (None, "none", ""):
+        return ""
+    total = max(1.0, duration * fps)
+    exprs = {
+        "zoom-in": f"min(1.14, 1.0 + 0.14*(in/{total:.0f}))",
+        "zoom-out": f"max(1.0, 1.14 - 0.14*(in/{total:.0f}))",
+        "ken-burns": f"1.0 + 0.14*(in/{total:.0f})",
+        "pop": f"1.0 + 0.16*sin(3.14159*(in/{total:.0f}))",
+    }
+    z = exprs.get(effect)
+    if not z:
+        return ""
+    return (f"zoompan=z='{z}':d=1:s={w}x{h}:fps={fps:.0f}"
+            f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'")
+
+
+def _ass_to_sec(t):
+    h, m, rest = t.split(":")
+    s, cs = rest.split(".")
+    return int(h) * 3600 + int(m) * 60 + int(s) + int(cs) / 100.0
+
+
+def retime_ass(ass_text, cuts_relative):
+    """Drop subtitle events inside removed segments and shift later ones back.
+
+    cuts_relative: list of [ra, rb] in clip-relative seconds to remove.
+    """
+    def shift(t):
+        shift_amt = 0.0
+        for a, b in cuts_relative:
+            if t >= b:
+                shift_amt += (b - a)
+            elif a <= t < b:
+                return None
+        return t - shift_amt
+
+    out = []
+    for line in ass_text.splitlines():
+        if line.startswith("Dialogue:"):
+            parts = line.split(",", 9)
+            if len(parts) < 10:
+                out.append(line)
+                continue
+            try:
+                st = _ass_to_sec(parts[1])
+                en = _ass_to_sec(parts[2])
+            except Exception:
+                out.append(line)
+                continue
+            ns = shift(st)
+            ne = shift(en)
+            if ns is None or ne is None:
+                continue
+            parts[1] = fmt_ass_time(ns)
+            parts[2] = fmt_ass_time(ne)
+            out.append(",".join(parts[:9]) + "," + parts[9])
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
+def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None, effect="none", fps=None):
     """Cut clip, crop to 9:16, burn (animated) subtitles, and create thumbnail."""
     duration = end - start
 
@@ -432,12 +531,17 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None)
             f"Alignment=2,MarginV=80'"
         )
 
-    # FFmpeg: crop to 9:16 (center crop), add subtitles
-    vf = (
-        f"scale=1080:1920:force_original_aspect_ratio=increase,"
-        f"crop=1080:1920,"
-        f"{sub_filter}"
-    )
+    # Optional video zoom effect (keeps frame count 1:1 to preserve audio sync)
+    zoom = ""
+    if effect not in (None, "none", ""):
+        fps = fps or _probe_fps(video_path)
+        zoom = build_zoom_filter(effect, 1080, 1920, duration, fps)
+    crop_part = "crop=1080:1920"
+    vf_parts = [f"scale=1080:1920:force_original_aspect_ratio=increase", crop_part]
+    if zoom:
+        vf_parts.append(zoom)
+    vf_parts.append(sub_filter)
+    vf = ",".join(vf_parts)
 
     cmd = [
         "ffmpeg", "-y",
@@ -457,19 +561,73 @@ def srt_path_escape(p):
     return p.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
 
 
-def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content):
-    """Re-cut an existing clip with new timings and subtitles."""
+def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effect="none", cuts=None, fps=None):
+    """Re-cut an existing clip with new timings, optional cut-out regions and subtitles."""
     import shutil
     clip_output = job_dir / clip_name
-    
+
     # Create new ASS file
     sub_path = str(clip_output) + ".ass"
     with open(sub_path, "w", encoding="utf-8") as f:
         f.write(new_ass_content)
-    
-    # Re-cut the video
-    # Note: start/end are relative to the ORIGINAL source video
-    cut_clip(video_path, start, end, None, clip_output, ass_content=new_ass_content)
+
+    cuts = cuts or []
+    # Normalise cuts to the clip window [start, end] (absolute seconds)
+    rel_cuts = sorted(
+        [(max(start, a), min(end, b)) for a, b in cuts if b > a and b > start and a < end]
+    )
+    rel_cuts = [(a, b) for a, b in rel_cuts if b - a > 0.05]
+
+    if not rel_cuts:
+        cut_clip(video_path, start, end, None, clip_output, ass_content=new_ass_content,
+                 effect=effect, fps=fps)
+        return True
+
+    # Build the kept segments (everything outside the cut regions)
+    pts = [start]
+    for a, b in rel_cuts:
+        pts.append(a)
+        pts.append(b)
+    pts.append(end)
+    segs = [(pts[i], pts[i + 1]) for i in range(0, len(pts) - 1, 2)]
+    segs = [(s, e) for s, e in segs if e - s > 0.05]
+    if not segs:
+        segs = [(start, end)]
+
+    tmpdir = job_dir / (clip_name + "_parts")
+    tmpdir.mkdir(exist_ok=True)
+    try:
+        part_files = []
+        for idx, (s, e) in enumerate(segs):
+            p = tmpdir / f"part{idx}.mp4"
+            subprocess.run(
+                ["ffmpeg", "-y", "-ss", str(s), "-i", video_path, "-t", str(e - s),
+                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+                 "-c:a", "aac", "-b:a", "128k", str(p)],
+                capture_output=True, check=True,
+            )
+            part_files.append(str(p))
+
+        listfile = tmpdir / "list.txt"
+        listfile.write_text("\n".join(f"file '{p}'" for p in part_files), encoding="utf-8")
+        concat_path = tmpdir / "concat.mp4"
+        subprocess.run(
+            ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listfile),
+             "-c", "copy", str(concat_path)],
+            capture_output=True, check=True,
+        )
+
+        # Re-time subtitles to the stitched timeline
+        cuts_rel = [(a - start, b - start) for a, b in rel_cuts]
+        new_ass_content = retime_ass(new_ass_content, cuts_rel)
+        with open(sub_path, "w", encoding="utf-8") as f:
+            f.write(new_ass_content)
+
+        kept_duration = (end - start) - sum(b - a for a, b in rel_cuts)
+        cut_clip(str(concat_path), 0, kept_duration, None, clip_output,
+                 ass_content=new_ass_content, effect=effect, fps=fps)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
     return True
 
 
@@ -509,7 +667,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
 
         emit("analyzing", progress=55)
         transcript_text = build_transcript_text(segments)
-        moments = find_moments_gemini(transcript_text, api_key, title, clip_count)
+        moments = find_moments_gemini(transcript_text, api_key, title, clip_count, language=language)
         emit("moments_found", count=len(moments), progress=70)
 
         clips = []
@@ -523,7 +681,9 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
 
             srt = create_srt(segments, moment["start"], moment["end"])
             ass = create_ass(segments, moment["start"], moment["end"])
-            cut_clip(video_path, moment["start"], moment["end"], srt, clip_output, ass_content=ass)
+            clip_effect = "zoom-in" if moment.get("zoom_in") else "none"
+            cut_clip(video_path, moment["start"], moment["end"], srt, clip_output,
+                     ass_content=ass, effect=clip_effect)
 
             clips.append({
                 "filename": clip_name,
@@ -534,6 +694,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
                 "viral_score": moment.get("viral_score", 0),
                 "start": moment["start"],
                 "end": moment["end"],
+                "effect": clip_effect,
                 "zoom_in": moment.get("zoom_in", {}),
             })
 

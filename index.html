@@ -220,14 +220,26 @@
               <video id="editor-video" controls></video>
               <span class="video-badge">9:16</span>
             </div>
-            <div class="time-inputs">
-              <div class="time-group">
-                <label>Start (s)</label>
-                <input type="number" id="editor-start" step="0.1" min="0" />
+
+            <div class="timeline-wrap">
+              <div class="timeline" id="tl-track">
+                <div class="tl-keep" id="tl-keep"></div>
+                <div class="tl-cut" id="tl-cut" style="display:none"></div>
+                <div class="tl-handle tl-in" id="tl-in" data-h="in"><span></span></div>
+                <div class="tl-handle tl-out" id="tl-out" data-h="out"><span></span></div>
+                <div class="tl-handle tl-cutin" id="tl-cutin" data-h="cutin" style="display:none"><span></span></div>
+                <div class="tl-handle tl-cutout" id="tl-cutout" data-h="cutout" style="display:none"><span></span></div>
+                <div class="tl-play" id="tl-play"></div>
               </div>
-              <div class="time-group">
-                <label>End (s)</label>
-                <input type="number" id="editor-end" step="0.1" min="0" />
+              <div class="tl-times" id="tl-times"></div>
+              <div class="tl-actions">
+                <button type="button" class="btn-ghost sm" id="tl-toggle-cut">✂ Ortadan kesim bölgesi ekle</button>
+                <span class="tl-hint-text">Mavi = tutulacak kısım · kırmızı = silinecek kısım</span>
+              </div>
+              <div class="tl-num" id="tl-num">
+                <label>Baş <input type="number" id="editor-start" step="0.1" min="0"></label>
+                <label>Bitiş <input type="number" id="editor-end" step="0.1" min="0"></label>
+                <label id="cut-num" style="display:none">Sil: <input type="number" id="editor-cutin" step="0.1" min="0"> – <input type="number" id="editor-cutout" step="0.1" min="0"></label>
               </div>
             </div>
           </div>
@@ -239,15 +251,29 @@
             </div>
 
             <div class="style-panel">
-              <div class="style-panel-head"><span>Style</span><span class="style-hint">live preview →</span></div>
+              <div class="style-panel-head"><span>Style &amp; Effect</span><span class="style-hint">live preview →</span></div>
+              <div class="select-row">
+                <label class="sel"><span>Effect</span>
+                  <select id="st-effect">
+                    <option value="none">None</option>
+                    <option value="zoom-in">Zoom In</option>
+                    <option value="zoom-out">Zoom Out</option>
+                    <option value="ken-burns">Ken Burns</option>
+                    <option value="pop">Pop</option>
+                  </select>
+                </label>
+                <label class="sel"><span>Font</span>
+                  <select id="st-fontname"></select>
+                </label>
+              </div>
               <div class="style-grid">
                 <div class="style-row"><label>Text</label><input type="color" id="st-primary" value="#ffffff"></div>
                 <div class="style-row"><label>Active</label><input type="color" id="st-secondary" value="#ffff00"></div>
                 <div class="style-row"><label>Outline</label><input type="color" id="st-outline" value="#000000"></div>
                 <div class="style-row"><label>Glow</label><input type="color" id="st-back" value="#ec4899"></div>
-                <div class="style-row"><label>Font</label><input type="range" id="st-fontsize" min="40" max="140" value="74"><span class="rv" id="rv-fontsize">74</span></div>
-                <div class="style-row"><label>Outline</label><input type="range" id="st-outline_w" min="0" max="10" value="4"><span class="rv" id="rv-outline_w">4</span></div>
-                <div class="style-row"><label>Glow</label><input type="range" id="st-shadow" min="0" max="10" value="2"><span class="rv" id="rv-shadow">2</span></div>
+                <div class="style-row"><label>Font size</label><input type="range" id="st-fontsize" min="40" max="140" value="74"><span class="rv" id="rv-fontsize">74</span></div>
+                <div class="style-row"><label>Outline</label><input type="range" id="st-outline_w" min="0" max="12" value="6"><span class="rv" id="rv-outline_w">6</span></div>
+                <div class="style-row"><label>Glow</label><input type="range" id="st-shadow" min="0" max="12" value="4"><span class="rv" id="rv-shadow">4</span></div>
                 <div class="style-row"><label>Bottom</label><input type="range" id="st-marginv" min="20" max="320" value="100"><span class="rv" id="rv-marginv">100</span></div>
               </div>
               <div class="style-toggles">
@@ -281,6 +307,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=11"></script>
+    <script src="app.js?v=12"></script>
   </body>
 </html>

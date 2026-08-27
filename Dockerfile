@@ -13,6 +13,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
     unzip \
+    fonts-dejavu \
+    fonts-liberation \
+    fonts-noto-core \
+    fonts-noto-color-emoji \
+    fonts-freefont-ttf \
+    fonts-roboto \
+    fonts-open-sans \
+    fonts-montserrat \
+    fonts-crosextra-carlito \
     && rm -rf /var/lib/apt/lists/*
 
 # Deno (for yt-dlp JS runtime challenges)

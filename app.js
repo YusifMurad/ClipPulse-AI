@@ -484,23 +484,31 @@ function escapeHtml(str) {
 
 /* ---- Editor ---- */
 let currentEditingClip = null;
+const FONTS = [
+  "Arial", "DejaVu Sans", "Liberation Sans", "Noto Sans", "Roboto", "Open Sans",
+  "Montserrat", "Carlito", "Verdana", "Tahoma", "Trebuchet MS", "Georgia",
+  "Times New Roman", "Courier New", "Comic Sans MS", "Impact"
+];
 const DEFAULT_STYLE = {
   primary: "#ffffff", secondary: "#ffff00", outline: "#000000", back: "#ec4899",
-  fontsize: 74, bold: true, outline_w: 4, shadow: 2, marginv: 100,
+  fontsize: 74, bold: true, outline_w: 6, shadow: 4, marginv: 100,
+  fontname: "Arial",
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
+
+// Timeline state (clip-relative seconds)
+let tl = { dur: 0, inRel: 0, outRel: 0, cut: false, cutIn: 0, cutOut: 0 };
+let tlDrag = null;
 
 function openEditor(clip) {
   currentEditingClip = clip;
   const modal = document.getElementById("editor-modal");
   const video = document.getElementById("editor-video");
-  const startInput = document.getElementById("editor-start");
-  const endInput = document.getElementById("editor-end");
   const title = document.getElementById("editor-title");
 
   title.textContent = clip.hook;
-  startInput.value = clip.start;
-  endInput.value = clip.end;
+  document.getElementById("editor-start").value = clip.start.toFixed(1);
+  document.getElementById("editor-end").value = clip.end.toFixed(1);
 
   video.src = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
   video.load();
@@ -512,6 +520,11 @@ function openEditor(clip) {
       document.getElementById("editor-ass").value = data.ass_content || "";
       const s = Object.assign({}, DEFAULT_STYLE, data.current_style || {});
       applyStyleToInputs(s);
+      const fx = document.getElementById("st-effect");
+      if (fx) fx.value = data.effect || "none";
+      video.addEventListener("loadedmetadata", () => {
+        initTimeline(video.duration);
+      }, { once: true });
       updatePreview();
     })
     .catch(() => {
@@ -521,6 +534,136 @@ function openEditor(clip) {
     });
 
   modal.style.display = "block";
+}
+
+function initTimeline(dur) {
+  tl.dur = dur || 0;
+  tl.inRel = 0;
+  tl.outRel = tl.dur;
+  tl.cut = false;
+  tl.cutIn = tl.dur ? tl.dur / 3 : 0;
+  tl.cutOut = tl.dur ? (tl.dur * 2) / 3 : 0;
+  document.getElementById("tl-cut").style.display = "none";
+  document.getElementById("tl-cutin").style.display = "none";
+  document.getElementById("tl-cutout").style.display = "none";
+  document.getElementById("cut-num").style.display = "none";
+  document.getElementById("tl-toggle-cut").textContent = "✂ Ortadan kesim bölgesi ekle";
+  updateTimelineUI();
+}
+
+function tlPos(t) {
+  if (!tl.dur) return "0%";
+  return ((t / tl.dur) * 100).toFixed(2) + "%";
+}
+
+function updateTimelineUI() {
+  const keep = document.getElementById("tl-keep");
+  const cut = document.getElementById("tl-cut");
+  keep.style.left = tlPos(tl.inRel);
+  keep.style.width = `calc(${tlPos(tl.outRel)} - ${tlPos(tl.inRel)})`;
+  document.getElementById("tl-in").style.left = tlPos(tl.inRel);
+  document.getElementById("tl-out").style.left = tlPos(tl.outRel);
+  if (tl.cut) {
+    cut.style.display = "block";
+    cut.style.left = tlPos(tl.cutIn);
+    cut.style.width = `calc(${tlPos(tl.cutOut)} - ${tlPos(tl.cutIn)})`;
+    document.getElementById("tl-cutin").style.display = "block";
+    document.getElementById("tl-cutout").style.display = "block";
+    document.getElementById("tl-cutin").style.left = tlPos(tl.cutIn);
+    document.getElementById("tl-cutout").style.left = tlPos(tl.cutOut);
+  }
+  const v = document.getElementById("editor-video");
+  if (v && v.duration) {
+    document.getElementById("tl-play").style.left = tlPos(v.currentTime);
+  }
+  // time labels
+  const base = currentEditingClip ? currentEditingClip.start : 0;
+  document.getElementById("tl-times").textContent =
+    `Tutulan: ${fmtT(base + tl.inRel)} → ${fmtT(base + tl.outRel)}` +
+    (tl.cut ? `  ·  Silinen: ${fmtT(base + tl.cutIn)} → ${fmtT(base + tl.cutOut)}` : "");
+  // number inputs (absolute source seconds)
+  document.getElementById("editor-start").value = (base + tl.inRel).toFixed(1);
+  document.getElementById("editor-end").value = (base + tl.outRel).toFixed(1);
+  if (tl.cut) {
+    document.getElementById("editor-cutin").value = (base + tl.cutIn).toFixed(1);
+    document.getElementById("editor-cutout").value = (base + tl.cutOut).toFixed(1);
+  }
+}
+
+function fmtT(s) {
+  s = Math.max(0, s);
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(1);
+  return `${m}:${sec.padStart(4, "0")}`;
+}
+
+function setupTimelineHandlers() {
+  const track = document.getElementById("tl-track");
+
+  function tFromEvent(e) {
+    const r = track.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    return Math.min(tl.dur, Math.max(0, (x / r.width) * tl.dur));
+  }
+
+  function onMove(e) {
+    if (!tlDrag) return;
+    const t = tFromEvent(e);
+    if (tlDrag === "in") tl.inRel = Math.min(t, tl.outRel - 0.2);
+    else if (tlDrag === "out") tl.outRel = Math.max(t, tl.inRel + 0.2);
+    else if (tlDrag === "cutin") tl.cutIn = Math.min(Math.max(t, tl.inRel), tl.cutOut - 0.2);
+    else if (tlDrag === "cutout") tl.cutOut = Math.max(Math.min(t, tl.outRel), tl.cutIn + 0.2);
+    updateTimelineUI();
+    e.preventDefault();
+  }
+  function onUp() {
+    tlDrag = null;
+    document.removeEventListener("pointermove", onMove);
+    document.removeEventListener("pointerup", onUp);
+  }
+
+  ["tl-in", "tl-out", "tl-cutin", "tl-cutout"].forEach(id => {
+    document.getElementById(id)?.addEventListener("pointerdown", e => {
+      tlDrag = document.getElementById(id).dataset.h;
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+  });
+
+  // Click on track to seek
+  track.addEventListener("pointerdown", e => {
+    if (e.target.classList.contains("tl-handle")) return;
+    const v = document.getElementById("editor-video");
+    if (v && v.duration) { v.currentTime = tFromEvent(e); updateTimelineUI(); }
+  });
+
+  document.getElementById("editor-video")?.addEventListener("timeupdate", () => {
+    document.getElementById("tl-play").style.left = tlPos(document.getElementById("editor-video").currentTime);
+  });
+
+  // Sync from number inputs
+  document.getElementById("editor-start")?.addEventListener("input", e => {
+    const base = currentEditingClip ? currentEditingClip.start : 0;
+    tl.inRel = Math.min(parseFloat(e.target.value) - base, tl.outRel - 0.2);
+    updateTimelineUI();
+  });
+  document.getElementById("editor-end")?.addEventListener("input", e => {
+    const base = currentEditingClip ? currentEditingClip.start : 0;
+    tl.outRel = Math.max(parseFloat(e.target.value) - base, tl.inRel + 0.2);
+    updateTimelineUI();
+  });
+  document.getElementById("tl-toggle-cut")?.addEventListener("click", () => {
+    tl.cut = !tl.cut;
+    document.getElementById("tl-cut").style.display = tl.cut ? "block" : "none";
+    document.getElementById("tl-cutin").style.display = tl.cut ? "block" : "none";
+    document.getElementById("tl-cutout").style.display = tl.cut ? "block" : "none";
+    document.getElementById("cut-num").style.display = tl.cut ? "flex" : "none";
+    document.getElementById("tl-toggle-cut").textContent = tl.cut
+      ? "✂ Kesim bölgesini kaldır" : "✂ Ortadan kesim bölgesi ekle";
+    updateTimelineUI();
+  });
 }
 
 function applyStyleToInputs(s) {
@@ -536,6 +679,11 @@ function applyStyleToInputs(s) {
   document.getElementById("st-gradient").checked = !!s.gradient;
   document.getElementById("st-grad-a").value = s.gradient_a || "#ec4899";
   document.getElementById("st-grad-b").value = s.gradient_b || "#a855f7";
+  const fn = document.getElementById("st-fontname");
+  if (fn && s.fontname) {
+    if (![...fn.options].some(o => o.value === s.fontname)) fn.value = FONTS[0];
+    else fn.value = s.fontname;
+  }
   document.getElementById("grad-row").style.display = s.gradient ? "flex" : "none";
   ["fontsize","outline_w","shadow","marginv"].forEach(k => {
     document.getElementById("rv-"+k).textContent = s[k];
@@ -543,6 +691,7 @@ function applyStyleToInputs(s) {
 }
 
 function collectStyle() {
+  const fn = document.getElementById("st-fontname");
   return {
     primary: document.getElementById("st-primary").value,
     secondary: document.getElementById("st-secondary").value,
@@ -553,6 +702,7 @@ function collectStyle() {
     outline_w: parseInt(document.getElementById("st-outline_w").value),
     shadow: parseInt(document.getElementById("st-shadow").value),
     marginv: parseInt(document.getElementById("st-marginv").value),
+    fontname: fn ? fn.value : "Arial",
     gradient: document.getElementById("st-gradient").checked,
     gradient_a: document.getElementById("st-grad-a").value,
     gradient_b: document.getElementById("st-grad-b").value
@@ -567,6 +717,7 @@ function updatePreview() {
   p.style.fontWeight = s.bold ? "800" : "400";
   p.style.fontSize = Math.max(18, s.fontsize / 3) + "px";
   p.style.textShadow = `0 0 ${s.shadow * 2}px ${s.back}`;
+  p.style.fontFamily = `'${s.fontname}', sans-serif`;
   if (s.gradient) {
     p.style.background = `linear-gradient(90deg, ${s.gradient_a}, ${s.gradient_b})`;
     p.style.webkitBackgroundClip = "text";
@@ -583,6 +734,16 @@ function updatePreview() {
 }
 
 function setupEditor() {
+  // Populate fonts once
+  const fnSel = document.getElementById("st-fontname");
+  if (fnSel && !fnSel.options.length) {
+    FONTS.forEach(f => {
+      const o = document.createElement("option");
+      o.value = f; o.textContent = f;
+      fnSel.appendChild(o);
+    });
+  }
+
   document.getElementById("close-editor-btn").onclick = () => {
     document.getElementById("editor-modal").style.display = "none";
   };
@@ -590,9 +751,12 @@ function setupEditor() {
     document.getElementById("editor-modal").style.display = "none";
   });
 
+  setupTimelineHandlers();
+
   // Live preview bindings
   ["st-primary","st-secondary","st-outline","st-back","st-fontsize","st-outline_w",
-   "st-shadow","st-marginv","st-bold","st-gradient","st-grad-a","st-grad-b","editor-text"]
+   "st-shadow","st-marginv","st-bold","st-gradient","st-grad-a","st-grad-b","editor-text",
+   "st-fontname","st-effect"]
    .forEach(id => {
      document.getElementById(id)?.addEventListener("input", updatePreview);
    });
@@ -620,13 +784,19 @@ function setupEditor() {
 
     const style = collectStyle();
     const text = document.getElementById("editor-text").value;
+    const effect = document.getElementById("st-effect")?.value || "none";
     const useRaw = document.querySelector(".advanced").open &&
                    document.getElementById("editor-ass").value.trim().length > 0;
 
+    const base = currentEditingClip.start;
     const payload = {
-      start: parseFloat(document.getElementById("editor-start").value),
-      end: parseFloat(document.getElementById("editor-end").value)
+      start: base + tl.inRel,
+      end: base + tl.outRel,
+      effect: effect
     };
+    if (tl.cut) {
+      payload.cuts = [[base + tl.cutIn, base + tl.cutOut]];
+    }
     if (useRaw) {
       payload.ass_content = document.getElementById("editor-ass").value;
     } else {
