@@ -33,6 +33,8 @@ jobs:
         run: |
           cd backend
           python3 -c "import server, pipeline; print('imports OK')"
+      - name: Check translations completeness
+        run: python scripts/check_translations.py
 
   test-windows:
     runs-on: windows-latest
@@ -50,6 +52,8 @@ jobs:
         run: |
           if (-not (Test-Path start.bat)) { throw 'start.bat missing' }
           if (-not (Test-Path start.ps1)) { throw 'start.ps1 missing' }
+      - name: Check translations completeness
+        run: python scripts/check_translations.py
 
   docker-build:
     runs-on: ubuntu-latest
