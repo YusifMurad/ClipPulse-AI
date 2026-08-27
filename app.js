@@ -962,7 +962,7 @@ function setupEditor() {
     const btn = document.getElementById("save-clip-btn");
     btn.disabled = true;
     const original = btn.innerHTML;
-    btn.textContent = "Re-rendering…";
+    btn.textContent = t("btn_rerendering");
 
     const style = collectStyle();
     const cues = collectCues();
@@ -1008,7 +1008,7 @@ function setupEditor() {
       alert(t("progress_error") + " " + data.error);
       }
     } catch (e) {
-      alert("Save error: " + e.message);
+      alert(t("progress_error") + " " + e.message);
     }
     btn.disabled = false;
     btn.innerHTML = original;
