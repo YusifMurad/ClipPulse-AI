@@ -1,0 +1,13 @@
+services:
+  clippulse:
+    build: .
+    image: ghcr.io/yusifmurad/clippulse-ai:latest
+    container_name: clippulse-ai
+    ports:
+      - "5555:5555"
+    volumes:
+      - ./output:/app/output
+      - ./backend/config:/app/backend/config
+    environment:
+      - PATH=/root/.deno/bin:/usr/local/bin:/usr/bin:/bin
+    restart: unless-stopped

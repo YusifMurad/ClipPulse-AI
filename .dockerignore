@@ -11,7 +11,8 @@ styles.css.bak
 *.egg-info/
 .venv/
 deno/
-site/
-assets/demo.mp4
-assets/demo.gif
-
+.git/
+.github/
+docs/
+*.md
+!requirements.txt

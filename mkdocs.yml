@@ -1,0 +1,53 @@
+site_name: ClipPulse AI Docs
+site_url: https://yusifmurad.github.io/ClipPulse-AI/
+site_description: Documentation for ClipPulse AI — turn videos into viral clips.
+repo_url: https://github.com/YusifMurad/ClipPulse-AI
+repo_name: YusifMurad/ClipPulse-AI
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: pink
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: pink
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: folder
+      fallback_to_default: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          site_name: ClipPulse AI Docs
+        - locale: tr
+          name: Türkçe
+        - locale: es
+          name: Español
+        - locale: ar
+          name: العربية
+          rtl: true
+        - locale: zh
+          name: 中文
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - toc:
+      permalink: true

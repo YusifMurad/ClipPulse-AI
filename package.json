@@ -1,14 +1,10 @@
 {
-  "name": "clipforge",
-  "version": "1.0.0",
-  "description": "YouTube to viral clips converter",
-  "main": "electron/main.js",
+  "name": "clippulse-ai",
+  "version": "0.1.0",
+  "description": "AI-powered video clip generator: YouTube URL to viral TikTok/Reels/Shorts clips with animated subtitles. Free, open-source, self-hosted.",
   "scripts": {
-    "start": "electron .",
-    "dev": "electron .",
+    "start": "cd backend && python3 server.py",
     "backend": "cd backend && pip3 install -r requirements.txt && python3 server.py"
   },
-  "dependencies": {
-    "electron": "^33.4.11"
-  }
+  "license": "MIT"
 }

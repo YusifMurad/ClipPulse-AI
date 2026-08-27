@@ -1,0 +1,21 @@
+{
+  "name": "ClipPulse AI",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "forwardPorts": [5555],
+  "postCreateCommand": "cd /app/backend && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt",
+  "containerEnv": {
+    "PATH": "/root/.deno/bin:/usr/local/bin:/usr/bin:/bin"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}

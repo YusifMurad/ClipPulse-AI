@@ -274,6 +274,11 @@ def get_settings():
     return jsonify({"has_api_key": False})
 
 
+@app.route("/api/health")
+def health():
+    return jsonify({"status": "ok"})
+
+
 FRONTEND_DIR = Path(__file__).parent.parent
 
 
