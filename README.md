@@ -25,6 +25,10 @@
   <img src="https://github.com/user-attachments/assets/5ae92a0d-b851-48d2-a31d-a771aaf24488" alt="ClipPulse AI Screenshot" width="900">
 </p>
 
+<p align="center">
+  <img src="assets/demo.gif" alt="ClipPulse AI demo" width="320">
+</p>
+
 ---
 
 ## ✨ Why ClipPulse AI?
