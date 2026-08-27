@@ -22,6 +22,74 @@ FFMPEG = os.environ.get("FFMPEG_PATH") or "ffmpeg"
 FFPROBE = os.environ.get("FFPROBE_PATH") or "ffprobe"
 
 
+# ---------------------------------------------------------------------------
+# Performance / acceleration helpers (auto GPU where available, else tuned CPU)
+# ---------------------------------------------------------------------------
+def _cpu_count():
+    try:
+        return max(1, os.cpu_count() or 1)
+    except Exception:
+        return 1
+
+
+_ENC_TYPE = None  # "nvenc" | "cpu"
+
+
+def _detect_encoder_type():
+    """Pick the best video encoder for this machine (cached)."""
+    global _ENC_TYPE
+    if _ENC_TYPE is not None:
+        return _ENC_TYPE
+    try:
+        has_nv = (os.path.exists("/dev/nvidia0")
+                  or subprocess.run(["nvidia-smi"], capture_output=True,
+                                    timeout=10).returncode == 0)
+    except Exception:
+        has_nv = False
+    _ENC_TYPE = "nvenc" if has_nv else "cpu"
+    return _ENC_TYPE
+
+
+def _video_codec_args(threads):
+    """Return ffmpeg -c:v ... args using the detected encoder."""
+    if _detect_encoder_type() == "nvenc":
+        return ["-c:v", "h264_nvenc", "-preset", "p4", "-rc", "vbr",
+                "-b:v", "0", "-cq", "23"]
+    return ["-c:v", "libx264", "-preset", "veryfast",
+            "-threads", str(max(1, threads)), "-crf", "23"]
+
+
+def _cuda_available():
+    try:
+        import torch
+        return bool(torch.cuda.is_available())
+    except Exception:
+        return False
+
+
+def _ffmpeg_encode(input_args, vf, output_path, threads=None):
+    """Encode a clip with the auto-selected encoder; fall back to CPU on failure."""
+    threads = max(1, threads or _cpu_count())
+    audio = ["-c:a", "aac", "-b:a", "128k"]
+    out_tmp = str(output_path) + ".tmp.mp4"
+    base = [FFMPEG, "-y"] + list(input_args)
+    if vf:
+        base += ["-vf", vf]
+    base += _video_codec_args(threads) + audio + ["-movflags", "+faststart", out_tmp]
+    try:
+        subprocess.run(base, capture_output=True, check=True)
+    except subprocess.CalledProcessError:
+        if _detect_encoder_type() != "cpu":
+            cpu_args = ["-c:v", "libx264", "-preset", "veryfast",
+                        "-threads", str(_cpu_count()), "-crf", "23"]
+            subprocess.run([FFMPEG, "-y"] + list(input_args) + (["-vf", vf] if vf else [])
+                           + cpu_args + audio + ["-movflags", "+faststart", out_tmp],
+                           capture_output=True, check=True)
+        else:
+            raise
+    os.replace(out_tmp, str(output_path))
+
+
 def _find_deno():
     """Locate the deno binary (optional, used by yt-dlp for YouTube)."""
     env = os.environ.get("DENO_BIN")
@@ -95,7 +163,11 @@ def download_video(url, job_dir):
 
 def transcribe(video_path, model_size="base", language=None):
     """Transcribe video with faster-whisper. If language given, skips detection (faster)."""
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+    n = _cpu_count()
+    device = "cuda" if _cuda_available() else "cpu"
+    compute = "float16" if device == "cuda" else "int8"
+    model = WhisperModel(model_size, device=device, compute_type=compute,
+                         cpu_threads=n, num_workers=1)
     transcribe_kwargs = {"beam_size": 5, "word_timestamps": True}
     if language:
         transcribe_kwargs["language"] = language
@@ -621,7 +693,7 @@ def retime_ass(ass_text, cuts_relative):
 
 
 def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None, effect="none",
-             focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None):
+             focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None, threads=None):
     """Cut clip, crop to 9:16, burn (animated) subtitles, and create thumbnail."""
     duration = end - start
 
@@ -670,22 +742,8 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     vf_parts.append(sub_filter)
     vf = ",".join(vf_parts)
 
-    cmd = [
-        FFMPEG, "-y",
-        "-ss", str(start),
-        "-i", video_path,
-        "-t", str(duration),
-        "-vf", vf,
-        "-c:v", "libx264", "-preset", "fast", "-crf", "23",
-        "-c:a", "aac", "-b:a", "128k",
-        "-movflags", "+faststart",
-        str(output_path) + ".tmp.mp4",
-    ]
-    subprocess.run(cmd, capture_output=True, check=True)
-    # Write to a temp then replace: avoids truncating the input when
-    # output_path == video_path (in-place re-edit of an existing clip).
-    import os
-    os.replace(str(output_path) + ".tmp.mp4", str(output_path))
+    input_args = ["-ss", str(start), "-i", video_path, "-t", str(duration)]
+    _ffmpeg_encode(input_args, vf, output_path, threads=threads)
 
 
 def srt_path_escape(p):
@@ -732,24 +790,16 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
         part_files = []
         for idx, (s, e) in enumerate(segs):
             p = tmpdir / f"part{idx}.mp4"
-            subprocess.run(
-                [FFMPEG, "-y", "-ss", str(s), "-i", video_path, "-t", str(e - s),
-                 "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-                 "-c:a", "aac", "-b:a", "128k", str(p)],
-                capture_output=True, check=True,
-            )
+            _ffmpeg_encode(["-ss", str(s), "-i", video_path, "-t", str(e - s)],
+                           None, str(p))
             part_files.append(str(p))
 
         listfile = tmpdir / "list.txt"
         listfile.write_text("\n".join(f"file '{p}'" for p in part_files), encoding="utf-8")
         concat_path = tmpdir / "concat.mp4"
         # Re-encode (not copy) so timestamps/duration are clean after splicing
-        subprocess.run(
-            [FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(listfile),
-             "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
-             "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(concat_path)],
-            capture_output=True, check=True,
-        )
+        _ffmpeg_encode(["-f", "concat", "-safe", "0", "-i", str(listfile)],
+                       None, str(concat_path))
 
         # Re-time subtitles to the stitched timeline
         cuts_rel = [(a - start, b - start) for a, b in rel_cuts]
@@ -805,22 +855,21 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
         moments = find_moments_gemini(transcript_text, api_key, title, clip_count, language=language)
         emit("moments_found", count=len(moments), progress=70)
 
-        clips = []
         total = len(moments)
-        for i, moment in enumerate(moments):
-            emit("cutting_clip", clip_index=i, total=total, progress=70 + int(25 * i / total))
+        max_workers = max(1, min(_cpu_count(), total))
+        per_threads = max(1, _cpu_count() // max_workers)
+
+        def _do_cut(i, moment):
             hook = moment.get("hook_title", f"clip_{i+1}")
             safe_hook = re.sub(r'[^\w\s-]', '', hook)[:40].strip().replace(" ", "_")
             clip_name = f"{i+1:02d}_{safe_hook}.mp4"
             clip_output = job_dir / clip_name
-
             srt = create_srt(segments, moment["start"], moment["end"])
             ass = create_ass(segments, moment["start"], moment["end"])
             clip_effect = "zoom-in" if moment.get("zoom_in") else "none"
             cut_clip(video_path, moment["start"], moment["end"], srt, clip_output,
-                     ass_content=ass, effect=clip_effect)
-
-            clips.append({
+                     ass_content=ass, effect=clip_effect, threads=per_threads)
+            return {
                 "filename": clip_name,
                 "hook": moment.get("hook_title", ""),
                 "hook_sentence": moment.get("hook_sentence", ""),
@@ -831,7 +880,20 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
                 "end": moment["end"],
                 "effect": clip_effect,
                 "zoom_in": moment.get("zoom_in", {}),
-            })
+            }
+
+        import concurrent.futures as _cf
+        results = {}
+        done = 0
+        with _cf.ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futs = {ex.submit(_do_cut, i, m): i for i, m in enumerate(moments)}
+            for f in _cf.as_completed(futs):
+                res = f.result()
+                results[futs[f]] = res
+                done += 1
+                emit("cutting_clip", clip_index=done, total=total,
+                     progress=70 + int(25 * done / total))
+        clips = [results[i] for i in range(total)]
 
         emit("done", clips=clips, progress=100)
         return {"status": "done", "title": title, "clips": clips, "job_dir": str(job_dir)}
