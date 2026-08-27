@@ -13,4 +13,6 @@ styles.css.bak
 deno/
 site/
 assets/demo.mp4
+.DS_Store
+*.log
 

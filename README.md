@@ -13,6 +13,8 @@
 [![Twitter](https://img.shields.io/badge/Twitter-@yusifkishidir-1DA1F2?logo=twitter&style=for-the-badge)](https://twitter.com/yusifkishidir)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
 [![Last Commit](https://img.shields.io/github/last-commit/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/commits/main)
+[![CI](https://img.shields.io/github/actions/workflow/status/YusifMurad/ClipPulse-AI/ci.yml?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/actions/workflows/ci.yml)
+[![Changelog](https://img.shields.io/badge/Changelog-CHANGELOG.md-blue?style=for-the-badge)](CHANGELOG.md)
 
 <p align="center">
   <a href="README.tr.md"><img src="https://img.shields.io/badge/lang-TR-red" alt="Türkçe"></a>
@@ -123,6 +125,30 @@ YouTube / MP4
      │
      ▼
 [6] Thumbnail + browser editor      (preview, trim, re-caption, download)
+```
+
+---
+
+## 📂 Project Structure
+
+```text
+ClipPulse-AI/
+├── backend/
+│   ├── server.py            # Flask API: upload, jobs, settings, i18n
+│   ├── pipeline.py          # Core: download → transcribe → Gemini → FFmpeg cut
+│   ├── api_seller.py        # Optional community/users API
+│   └── requirements.txt
+├── electron/                # Optional desktop wrapper (main.js, preload.js)
+├── scripts/                 # check_translations.py + asset/build helpers
+├── assets/                  # demo.gif, og-image.svg
+├── docs/                    # MkDocs documentation site (en, tr, es, ar, zh)
+├── .github/                 # CI/CD, issue/PR templates, workflows
+├── translations.js          # 14-language UI strings (served to the browser)
+├── index.html · app.js · styles.css   # Frontend (single-page web UI)
+├── start.sh · start.bat · start.ps1   # Launchers (Linux/macOS/Windows)
+├── Dockerfile · docker-compose.yml    # Container deployment
+├── README.md (+ tr/es/ar/zh/windows)  # Localized docs
+└── ROADMAP.md · CONTRIBUTING.md · SECURITY.md · CHANGELOG.md · LICENSE
 ```
 
 ---
