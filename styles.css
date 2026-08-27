@@ -1214,6 +1214,81 @@ h2 {
   outline: none;
 }
 
+/* ---- Cue list ---- */
+.cue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.cue-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+
+.cue-row .cue-start,
+.cue-row .cue-end {
+  width: 72px;
+  background: var(--bg-highlight);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 7px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.cue-row .cue-start:focus,
+.cue-row .cue-end:focus {
+  border-color: var(--accent);
+}
+
+.cue-dash {
+  color: var(--text-muted);
+}
+
+.cue-row .cue-text {
+  flex: 1;
+  background: var(--bg-highlight);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.cue-row .cue-text:focus {
+  border-color: var(--accent);
+}
+
+.cue-del {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all var(--transition);
+}
+
+.cue-del:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
 .btn-ghost {
   background: transparent;
   border: 1px solid var(--border-strong);

@@ -409,6 +409,87 @@ def rebuild_clip_ass(job_dir, start, end, new_text, style):
     return build_ass_with_style(window_words, start, end, new_text, style)
 
 
+def extract_cues(segments, start, end):
+    """Build a list of editable subtitle cues (clip-relative seconds) from the transcript."""
+    cues = []
+    for seg in segments:
+        if seg["end"] < start or seg["start"] > end:
+            continue
+        cs = max(0.0, seg["start"] - start)
+        ce = min(end - start, seg["end"] - start)
+        if ce > cs:
+            cues.append({"start": round(cs, 3), "end": round(ce, 3),
+                         "text": (seg.get("text") or "").strip()})
+
+    # Ensure at least two cues so the editor always shows intervals
+    if len(cues) == 1:
+        c = cues[0]
+        words = (c["text"] or "").split()
+        if len(words) > 1:
+            mid = int(len(words) / 2)
+            mid_t = (c["start"] + c["end"]) / 2
+            cues = [
+                {"start": c["start"], "end": round(mid_t, 3), "text": " ".join(words[:mid])},
+                {"start": round(mid_t, 3), "end": c["end"], "text": " ".join(words[mid:])},
+            ]
+        else:
+            mid = (c["start"] + c["end"]) / 2
+            cues = [
+                {"start": c["start"], "end": round(mid, 3), "text": c["text"]},
+                {"start": round(mid, 3), "end": c["end"], "text": c["text"]},
+            ]
+    elif len(cues) == 0:
+        cues = [
+            {"start": 0.0, "end": 1.0, "text": ""},
+            {"start": 1.0, "end": 2.0, "text": ""},
+        ]
+    return cues
+
+
+def build_ass_from_cues(cues, style):
+    """Build animated ASS strictly from the user's cue list (start/end/text).
+
+    Each cue is split into words that animate idle -> active across the cue's
+    own time window, so the timing the user sets is honoured exactly.
+    """
+    header = build_ass_header(style)
+    grad = style.get("gradient", False)
+    grad_a = style.get("gradient_a", "#ec4899")
+    grad_b = style.get("gradient_b", "#a855f7")
+    primary = hex_to_ass(style.get("primary", "#ffffff"))
+    active = hex_to_ass("#FFFFFF") if grad else hex_to_ass(style.get("secondary", "#ffff00"))
+
+    events = []
+    for cue in cues:
+        try:
+            cs = float(cue.get("start", 0))
+            ce = float(cue.get("end", cs + 1))
+        except (TypeError, ValueError):
+            continue
+        text = (cue.get("text") or "").strip()
+        if not text or ce <= cs:
+            continue
+        words = text.split()
+        n = len(words)
+        if n == 0:
+            continue
+        if n == 1:
+            idle = hex_to_ass(lerp_color(grad_a, grad_b, 0)) if grad else primary
+            line = f"{{\\1c{idle}\\t({cs:.2f},{ce:.2f},\\1c{active})}}{words[0]}"
+            events.append(f"Dialogue: 0,{fmt_ass_time(cs)},{fmt_ass_time(ce)},Word,,0,0,0,,{line}")
+            continue
+        dur = (ce - cs) / n
+        for i, w in enumerate(words):
+            ws = cs + i * dur
+            we = cs + (i + 1) * dur
+            if we <= ws:
+                continue
+            idle = hex_to_ass(lerp_color(grad_a, grad_b, i / (n - 1))) if grad else primary
+            line = f"{{\\1c{idle}\\t({ws:.2f},{we:.2f},\\1c{active})}}{w}"
+            events.append(f"Dialogue: 0,{fmt_ass_time(ws)},{fmt_ass_time(we)},Word,,0,0,0,,{line}")
+    return header + "\n".join(events)
+
+
 def fmt_srt_time(seconds):
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
@@ -611,9 +692,11 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
         listfile = tmpdir / "list.txt"
         listfile.write_text("\n".join(f"file '{p}'" for p in part_files), encoding="utf-8")
         concat_path = tmpdir / "concat.mp4"
+        # Re-encode (not copy) so timestamps/duration are clean after splicing
         subprocess.run(
             ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listfile),
-             "-c", "copy", str(concat_path)],
+             "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+             "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(concat_path)],
             capture_output=True, check=True,
         )
 

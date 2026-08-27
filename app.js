@@ -506,6 +506,9 @@ function openEditor(clip) {
   const video = document.getElementById("editor-video");
   const title = document.getElementById("editor-title");
 
+  // Reset timeline state so no stale cut/trim carries over
+  tl = { dur: 0, inRel: 0, outRel: 0, cut: false, cutIn: 0, cutOut: 0 };
+
   title.textContent = clip.hook;
   document.getElementById("editor-start").value = clip.start.toFixed(1);
   document.getElementById("editor-end").value = clip.end.toFixed(1);
@@ -516,7 +519,7 @@ function openEditor(clip) {
   fetch(API + "/api/clip_data/" + currentJobId + "/" + encodeURIComponent(clip.filename))
     .then(r => r.json())
     .then(data => {
-      document.getElementById("editor-text").value = data.plain_text || "";
+      renderCues(data.cues && data.cues.length ? data.cues : []);
       document.getElementById("editor-ass").value = data.ass_content || "";
       const s = Object.assign({}, DEFAULT_STYLE, data.current_style || {});
       applyStyleToInputs(s);
@@ -528,12 +531,52 @@ function openEditor(clip) {
       updatePreview();
     })
     .catch(() => {
-      document.getElementById("editor-text").value = "";
+      renderCues([]);
       applyStyleToInputs(DEFAULT_STYLE);
       updatePreview();
     });
 
   modal.style.display = "block";
+}
+
+function renderCues(cues) {
+  const list = document.getElementById("cue-list");
+  list.innerHTML = "";
+  cues.forEach((c, i) => list.appendChild(makeCueRow(c, i)));
+  if (!cues.length) list.appendChild(makeCueRow({ start: 0, end: 1, text: "" }, 0));
+}
+
+function makeCueRow(c, idx) {
+  const row = document.createElement("div");
+  row.className = "cue-row";
+  row.innerHTML = `
+    <input type="number" step="0.1" min="0" class="cue-start" value="${(+c.start).toFixed(2)}" title="Başlangıç (sn)">
+    <span class="cue-dash">–</span>
+    <input type="number" step="0.1" min="0" class="cue-end" value="${(+c.end).toFixed(2)}" title="Bitiş (sn)">
+    <input type="text" class="cue-text" value="${escapeAttr(c.text || "")}" placeholder="Metin…">
+    <button type="button" class="cue-del" title="Sil">✕</button>
+  `;
+  row.querySelector(".cue-del").addEventListener("click", () => {
+    row.remove();
+    updatePreview();
+  });
+  row.querySelectorAll("input").forEach(inp => inp.addEventListener("input", updatePreview));
+  return row;
+}
+
+function escapeAttr(s) {
+  return (s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function collectCues() {
+  const cues = [];
+  document.querySelectorAll("#cue-list .cue-row").forEach(row => {
+    const start = parseFloat(row.querySelector(".cue-start").value) || 0;
+    const end = parseFloat(row.querySelector(".cue-end").value) || 0;
+    const text = row.querySelector(".cue-text").value.trim();
+    if (text) cues.push({ start: +start.toFixed(3), end: +end.toFixed(3), text });
+  });
+  return cues;
 }
 
 function initTimeline(dur) {
@@ -710,7 +753,8 @@ function collectStyle() {
 }
 
 function updatePreview() {
-  const txt = document.getElementById("editor-text").value || "Your caption preview";
+  const cues = collectCues();
+  const txt = cues.map(c => c.text).join("  /  ") || "Your caption preview";
   const p = document.getElementById("editor-preview");
   const s = collectStyle();
   p.textContent = txt;
@@ -755,11 +799,17 @@ function setupEditor() {
 
   // Live preview bindings
   ["st-primary","st-secondary","st-outline","st-back","st-fontsize","st-outline_w",
-   "st-shadow","st-marginv","st-bold","st-gradient","st-grad-a","st-grad-b","editor-text",
+   "st-shadow","st-marginv","st-bold","st-gradient","st-grad-a","st-grad-b",
    "st-fontname","st-effect"]
    .forEach(id => {
      document.getElementById(id)?.addEventListener("input", updatePreview);
    });
+
+  document.getElementById("add-cue-btn")?.addEventListener("click", () => {
+    const list = document.getElementById("cue-list");
+    list.appendChild(makeCueRow({ start: 0, end: 1, text: "" }, list.children.length));
+    updatePreview();
+  });
   document.getElementById("st-gradient")?.addEventListener("change", e => {
     document.getElementById("grad-row").style.display = e.target.checked ? "flex" : "none";
     updatePreview();
@@ -783,25 +833,19 @@ function setupEditor() {
     btn.textContent = "Re-rendering…";
 
     const style = collectStyle();
-    const text = document.getElementById("editor-text").value;
+    const cues = collectCues();
     const effect = document.getElementById("st-effect")?.value || "none";
-    const useRaw = document.querySelector(".advanced").open &&
-                   document.getElementById("editor-ass").value.trim().length > 0;
 
     const base = currentEditingClip.start;
     const payload = {
       start: base + tl.inRel,
       end: base + tl.outRel,
-      effect: effect
+      effect: effect,
+      cues: cues,
+      style: style
     };
     if (tl.cut) {
       payload.cuts = [[base + tl.cutIn, base + tl.cutOut]];
-    }
-    if (useRaw) {
-      payload.ass_content = document.getElementById("editor-ass").value;
-    } else {
-      payload.text = text;
-      payload.style = style;
     }
 
     try {

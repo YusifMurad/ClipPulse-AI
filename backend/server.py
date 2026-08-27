@@ -230,6 +230,23 @@ def get_clip_data(job_id, filename):
             plain_text += txt.strip() + " "
     plain_text = plain_text.strip()
 
+    # Editable subtitle cues (clip-relative seconds) for the cue-list editor
+    cues = []
+    seg_path = job_dir / "segments.json"
+    if seg_path.exists():
+        try:
+            from pipeline import extract_cues
+            seg_data = json.loads(seg_path.read_text(encoding="utf-8"))
+            load_persisted(job_id)
+            clip_meta = next(
+                (c for c in jobs.get(job_id, {}).get("result", {}).get("clips", [])
+                 if c.get("filename") == filename), {})
+            cstart = clip_meta.get("start", 0)
+            cend = clip_meta.get("end", 0)
+            cues = extract_cues(seg_data.get("segments", []), cstart, cend)
+        except Exception:
+            cues = []
+
     # Current style parsed from the ASS Style line (so editor starts with real values)
     current_style = {}
     import re as _re
@@ -270,6 +287,7 @@ def get_clip_data(job_id, filename):
         "filename": filename,
         "ass_content": ass_content,
         "plain_text": plain_text,
+        "cues": cues,
         "current_style": current_style,
         "effect": clip_meta.get("effect", "none"),
         "start": clip_meta.get("start", 0),
@@ -292,6 +310,24 @@ def update_clip(job_id, filename):
     start = float(data.get("start", 0))
     end = float(data.get("end", 0))
     ass_content = data.get("ass_content", "")
+
+    # Build ASS from the user's cue list (exact times + text) when provided
+    cues = data.get("cues")
+    style = data.get("style")
+    if cues is not None and style is not None:
+        try:
+            from pipeline import build_ass_from_cues
+            ass_content = build_ass_from_cues(cues, style)
+        except Exception as e:
+            return jsonify({"error": "Subtitle build failed: " + str(e)}), 500
+    else:
+        # Legacy: rebuild from a single caption + transcript word timings
+        text = data.get("text")
+        if text is not None and style is not None:
+            try:
+                ass_content = rebuild_clip_ass(job_dir, start, end, text, style)
+            except Exception as e:
+                return jsonify({"error": "Subtitle rebuild failed: " + str(e)}), 500
     effect = data.get("effect", "none")
     cuts = data.get("cuts") or []
 
