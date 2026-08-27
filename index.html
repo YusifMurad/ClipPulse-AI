@@ -200,41 +200,87 @@
     <!-- Clip Editor Modal -->
     <div id="editor-modal" class="modal" style="display:none;">
       <div class="modal-overlay"></div>
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="editor-title">Edit Clip</h2>
+      <div class="modal-content editor-modal-content">
+        <div class="modal-header editor-header">
+          <div class="editor-brand">
+            <span class="editor-logo">✦</span>
+            <div>
+              <h2 id="editor-title">Edit Clip</h2>
+              <p class="editor-sub">Refine caption text, colors &amp; style</p>
+            </div>
+          </div>
           <button id="close-editor-btn" class="close-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
         </div>
+
         <div class="editor-body">
           <div class="editor-left">
-            <video id="editor-video" controls></video>
+            <div class="video-frame">
+              <video id="editor-video" controls></video>
+              <span class="video-badge">9:16</span>
+            </div>
             <div class="time-inputs">
               <div class="time-group">
-                <label>Start (sec)</label>
+                <label>Start (s)</label>
                 <input type="number" id="editor-start" step="0.1" min="0" />
               </div>
               <div class="time-group">
-                <label>End (sec)</label>
+                <label>End (s)</label>
                 <input type="number" id="editor-end" step="0.1" min="0" />
               </div>
             </div>
           </div>
+
           <div class="editor-right">
-            <h3>Subtitles (ASS)</h3>
-            <textarea id="editor-ass" spellcheck="false"></textarea>
+            <div class="field">
+              <label class="field-label">Caption text</label>
+              <textarea id="editor-text" class="caption-input" placeholder="Type your caption…"></textarea>
+            </div>
+
+            <div class="style-panel">
+              <div class="style-panel-head"><span>Style</span><span class="style-hint">live preview →</span></div>
+              <div class="style-grid">
+                <div class="style-row"><label>Text</label><input type="color" id="st-primary" value="#ffffff"></div>
+                <div class="style-row"><label>Active</label><input type="color" id="st-secondary" value="#ffff00"></div>
+                <div class="style-row"><label>Outline</label><input type="color" id="st-outline" value="#000000"></div>
+                <div class="style-row"><label>Glow</label><input type="color" id="st-back" value="#ec4899"></div>
+                <div class="style-row"><label>Font</label><input type="range" id="st-fontsize" min="40" max="140" value="74"><span class="rv" id="rv-fontsize">74</span></div>
+                <div class="style-row"><label>Outline</label><input type="range" id="st-outline_w" min="0" max="10" value="4"><span class="rv" id="rv-outline_w">4</span></div>
+                <div class="style-row"><label>Glow</label><input type="range" id="st-shadow" min="0" max="10" value="2"><span class="rv" id="rv-shadow">2</span></div>
+                <div class="style-row"><label>Bottom</label><input type="range" id="st-marginv" min="20" max="320" value="100"><span class="rv" id="rv-marginv">100</span></div>
+              </div>
+              <div class="style-toggles">
+                <label class="chk"><input type="checkbox" id="st-bold" checked> Bold</label>
+                <label class="chk"><input type="checkbox" id="st-gradient"> Gradient text</label>
+              </div>
+              <div class="grad-row" id="grad-row" style="display:none">
+                <div class="style-row"><label>From</label><input type="color" id="st-grad-a" value="#ec4899"></div>
+                <div class="style-row"><label>To</label><input type="color" id="st-grad-b" value="#a855f7"></div>
+              </div>
+            </div>
+
+            <div class="preview-wrap">
+              <div id="editor-preview" class="sub-preview">Your caption preview</div>
+            </div>
+
+            <details class="advanced">
+              <summary>Advanced · edit raw ASS</summary>
+              <textarea id="editor-ass" spellcheck="false"></textarea>
+            </details>
           </div>
         </div>
+
         <div class="modal-footer">
+          <button id="reset-style-btn" class="btn-ghost">Reset style</button>
           <button id="save-clip-btn" class="btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Save & Re-render
+            Save &amp; Re-render
           </button>
         </div>
       </div>
     </div>
 
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
   </body>
 </html>

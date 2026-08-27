@@ -484,6 +484,11 @@ function escapeHtml(str) {
 
 /* ---- Editor ---- */
 let currentEditingClip = null;
+const DEFAULT_STYLE = {
+  primary: "#ffffff", secondary: "#ffff00", outline: "#000000", back: "#ec4899",
+  fontsize: 74, bold: true, outline_w: 4, shadow: 2, marginv: 100,
+  gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
+};
 
 function openEditor(clip) {
   currentEditingClip = clip;
@@ -491,59 +496,153 @@ function openEditor(clip) {
   const video = document.getElementById("editor-video");
   const startInput = document.getElementById("editor-start");
   const endInput = document.getElementById("editor-end");
-  const assArea = document.getElementById("editor-ass");
   const title = document.getElementById("editor-title");
-  
-  title.textContent = `Edit: ${clip.hook}`;
+
+  title.textContent = clip.hook;
   startInput.value = clip.start;
   endInput.value = clip.end;
-  
-  // Load preview video
+
   video.src = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
   video.load();
-  
-  // Load ASS content
+
   fetch(API + "/api/clip_data/" + currentJobId + "/" + encodeURIComponent(clip.filename))
     .then(r => r.json())
     .then(data => {
-      assArea.value = data.ass_content || "";
+      document.getElementById("editor-text").value = data.plain_text || "";
+      document.getElementById("editor-ass").value = data.ass_content || "";
+      const s = Object.assign({}, DEFAULT_STYLE, data.current_style || {});
+      applyStyleToInputs(s);
+      updatePreview();
     })
-    .catch(() => { assArea.value = "Could not load subtitles."; });
-    
+    .catch(() => {
+      document.getElementById("editor-text").value = "";
+      applyStyleToInputs(DEFAULT_STYLE);
+      updatePreview();
+    });
+
   modal.style.display = "block";
+}
+
+function applyStyleToInputs(s) {
+  document.getElementById("st-primary").value = s.primary;
+  document.getElementById("st-secondary").value = s.secondary;
+  document.getElementById("st-outline").value = s.outline;
+  document.getElementById("st-back").value = s.back;
+  document.getElementById("st-fontsize").value = s.fontsize;
+  document.getElementById("st-outline_w").value = s.outline_w;
+  document.getElementById("st-shadow").value = s.shadow;
+  document.getElementById("st-marginv").value = s.marginv;
+  document.getElementById("st-bold").checked = !!s.bold;
+  document.getElementById("st-gradient").checked = !!s.gradient;
+  document.getElementById("st-grad-a").value = s.gradient_a || "#ec4899";
+  document.getElementById("st-grad-b").value = s.gradient_b || "#a855f7";
+  document.getElementById("grad-row").style.display = s.gradient ? "flex" : "none";
+  ["fontsize","outline_w","shadow","marginv"].forEach(k => {
+    document.getElementById("rv-"+k).textContent = s[k];
+  });
+}
+
+function collectStyle() {
+  return {
+    primary: document.getElementById("st-primary").value,
+    secondary: document.getElementById("st-secondary").value,
+    outline: document.getElementById("st-outline").value,
+    back: document.getElementById("st-back").value,
+    fontsize: parseInt(document.getElementById("st-fontsize").value),
+    bold: document.getElementById("st-bold").checked,
+    outline_w: parseInt(document.getElementById("st-outline_w").value),
+    shadow: parseInt(document.getElementById("st-shadow").value),
+    marginv: parseInt(document.getElementById("st-marginv").value),
+    gradient: document.getElementById("st-gradient").checked,
+    gradient_a: document.getElementById("st-grad-a").value,
+    gradient_b: document.getElementById("st-grad-b").value
+  };
+}
+
+function updatePreview() {
+  const txt = document.getElementById("editor-text").value || "Your caption preview";
+  const p = document.getElementById("editor-preview");
+  const s = collectStyle();
+  p.textContent = txt;
+  p.style.fontWeight = s.bold ? "800" : "400";
+  p.style.fontSize = Math.max(18, s.fontsize / 3) + "px";
+  p.style.textShadow = `0 0 ${s.shadow * 2}px ${s.back}`;
+  if (s.gradient) {
+    p.style.background = `linear-gradient(90deg, ${s.gradient_a}, ${s.gradient_b})`;
+    p.style.webkitBackgroundClip = "text";
+    p.style.backgroundClip = "text";
+    p.style.color = "transparent";
+    p.style.webkitTextFillColor = "transparent";
+  } else {
+    p.style.background = "none";
+    p.style.webkitBackgroundClip = "border-box";
+    p.style.backgroundClip = "border-box";
+    p.style.color = s.primary;
+    p.style.webkitTextFillColor = s.primary;
+  }
 }
 
 function setupEditor() {
   document.getElementById("close-editor-btn").onclick = () => {
     document.getElementById("editor-modal").style.display = "none";
   };
-
-  // Close on overlay click
   document.querySelector(".modal-overlay")?.addEventListener("click", () => {
     document.getElementById("editor-modal").style.display = "none";
   });
-  
+
+  // Live preview bindings
+  ["st-primary","st-secondary","st-outline","st-back","st-fontsize","st-outline_w",
+   "st-shadow","st-marginv","st-bold","st-gradient","st-grad-a","st-grad-b","editor-text"]
+   .forEach(id => {
+     document.getElementById(id)?.addEventListener("input", updatePreview);
+   });
+  document.getElementById("st-gradient")?.addEventListener("change", e => {
+    document.getElementById("grad-row").style.display = e.target.checked ? "flex" : "none";
+    updatePreview();
+  });
+  ["fontsize","outline_w","shadow","marginv"].forEach(k => {
+    document.getElementById("st-"+k)?.addEventListener("input", e => {
+      document.getElementById("rv-"+k).textContent = e.target.value;
+    });
+  });
+
+  document.getElementById("reset-style-btn").onclick = () => {
+    applyStyleToInputs(DEFAULT_STYLE);
+    updatePreview();
+  };
+
   document.getElementById("save-clip-btn").onclick = async () => {
     if (!currentEditingClip) return;
     const btn = document.getElementById("save-clip-btn");
     btn.disabled = true;
-    btn.textContent = "Re-rendering...";
-    
+    const original = btn.innerHTML;
+    btn.textContent = "Re-rendering…";
+
+    const style = collectStyle();
+    const text = document.getElementById("editor-text").value;
+    const useRaw = document.querySelector(".advanced").open &&
+                   document.getElementById("editor-ass").value.trim().length > 0;
+
+    const payload = {
+      start: parseFloat(document.getElementById("editor-start").value),
+      end: parseFloat(document.getElementById("editor-end").value)
+    };
+    if (useRaw) {
+      payload.ass_content = document.getElementById("editor-ass").value;
+    } else {
+      payload.text = text;
+      payload.style = style;
+    }
+
     try {
       const r = await fetch(API + "/api/update_clip/" + currentJobId + "/" + encodeURIComponent(currentEditingClip.filename), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          start: parseFloat(document.getElementById("editor-start").value),
-          end: parseFloat(document.getElementById("editor-end").value),
-          ass_content: document.getElementById("editor-ass").value
-        })
+        body: JSON.stringify(payload)
       });
       const data = await r.json();
       if (data.ok) {
         document.getElementById("editor-modal").style.display = "none";
-        
-        // Update the video in the grid without reloading
         const cards = document.querySelectorAll(".clip-card");
         cards.forEach(card => {
           const video = card.querySelector("video");
@@ -558,8 +657,7 @@ function setupEditor() {
     } catch (e) {
       alert("Save error: " + e.message);
     }
-    
     btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save & Re-render';
+    btn.innerHTML = original;
   };
 }

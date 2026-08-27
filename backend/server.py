@@ -12,7 +12,7 @@ from functools import wraps
 from flask import Flask, request, jsonify, send_from_directory, send_file
 from flask_cors import CORS
 
-from pipeline import process_video, OUTPUT_DIR, recut_clip
+from pipeline import process_video, OUTPUT_DIR, recut_clip, rebuild_clip_ass
 
 app = Flask(__name__)
 CORS(app)
@@ -194,15 +194,57 @@ def get_clip_data(job_id, filename):
     if ass_path.exists():
         with open(ass_path, "r", encoding="utf-8") as f:
             ass_content = f.read()
-            
+
+    # Plain caption text (tags stripped) for the editor textarea
+    plain_text = ""
+    for line in ass_content.splitlines():
+        if line.startswith("Dialogue:"):
+            txt = line.split(",", 9)[-1] if "," in line else ""
+            import re as _re
+            txt = _re.sub(r"\{[^}]*\}", "", txt)
+            plain_text += txt.strip() + " "
+    plain_text = plain_text.strip()
+
+    # Current style parsed from the ASS Style line (so editor starts with real values)
+    current_style = {}
+    import re as _re
+    sm = _re.search(r"^Style:\s*(.*)$", ass_content, _re.MULTILINE)
+    if sm:
+        def ass_to_hex(a):
+            a = a[2:].rstrip("&")
+            if len(a) == 8:
+                a = a[2:]  # strip alpha
+            b, g, r = a[0:2], a[2:4], a[4:6]
+            return "#" + r + g + b
+        parts = [p.strip() for p in sm.group(1).split(",")]
+        # V4+ Style field order: Name,Fontname,Fontsize,Primary,Secondary,Outline,Back,
+        # Bold,Italic,Underline,Strike,ScaleX,ScaleY,Spacing,Angle,BorderStyle,
+        # Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+        try:
+            current_style = {
+                "fontsize": int(parts[2]),
+                "primary": ass_to_hex(parts[3]),
+                "secondary": ass_to_hex(parts[4]),
+                "outline": ass_to_hex(parts[5]),
+                "back": ass_to_hex(parts[6]),
+                "bold": parts[7] == "1",
+                "outline_w": int(parts[16]),
+                "shadow": int(parts[17]),
+                "marginv": int(parts[21]),
+            }
+        except (IndexError, ValueError):
+            current_style = {}
+
     # Get clip metadata from jobs dict
     job_data = jobs.get(job_id, {}).get("result", {})
     clip_meta = next((c for c in job_data.get("clips", []) if c["filename"] == filename), {})
-    
+
     return jsonify({
         "source": str(source[0]),
         "filename": filename,
         "ass_content": ass_content,
+        "plain_text": plain_text,
+        "current_style": current_style,
         "start": clip_meta.get("start", 0),
         "end": clip_meta.get("end", 0),
         "hook": clip_meta.get("hook", "")
@@ -223,7 +265,16 @@ def update_clip(job_id, filename):
     start = float(data.get("start", 0))
     end = float(data.get("end", 0))
     ass_content = data.get("ass_content", "")
-    
+
+    # If a new caption + style is provided, regenerate the ASS from the transcript
+    text = data.get("text")
+    style = data.get("style")
+    if text is not None and style is not None:
+        try:
+            ass_content = rebuild_clip_ass(job_dir, start, end, text, style)
+        except Exception as e:
+            return jsonify({"error": "Subtitle rebuild failed: " + str(e)}), 500
+
     try:
         recut_clip(str(source[0]), job_dir, filename, start, end, ass_content)
         return jsonify({"ok": True, "message": "Clip updated"})

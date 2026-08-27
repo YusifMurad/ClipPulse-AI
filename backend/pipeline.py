@@ -274,6 +274,120 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     return header + "\n".join(events)
 
 
+def hex_to_ass(hex_color):
+    """Convert '#RRGGBB' to ASS colour format '&HBBGGRR&'."""
+    h = (hex_color or "#ffffff").lstrip("#")
+    if len(h) >= 6:
+        r, g, b = h[0:2], h[2:4], h[4:6]
+    else:
+        r, g, b = "ff", "ff", "ff"
+    return f"&H{b}{g}{r}&"
+
+
+def lerp_color(c1, c2, t):
+    """Interpolate between two '#RRGGBB' colours. t in [0,1]."""
+    def p(c):
+        c = c.lstrip("#")
+        return [int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)]
+    a, b = p(c1), p(c2)
+    return "#" + "".join(f"{int(a[i] + (b[i] - a[i]) * t):02X}" for i in range(3))
+
+
+def build_ass_header(style):
+    primary = hex_to_ass(style.get("primary", "#ffffff"))
+    secondary = hex_to_ass(style.get("secondary", "#ffff00"))
+    outline = hex_to_ass(style.get("outline", "#000000"))
+    back = hex_to_ass(style.get("back", "#000000"))
+    fontsize = int(style.get("fontsize", 74))
+    bold = 1 if style.get("bold", True) else 0
+    outline_w = int(style.get("outline_w", 4))
+    shadow = int(style.get("shadow", 2))
+    marginv = int(style.get("marginv", 100))
+    style_line = (
+        f"Style: Word, Arial, {fontsize}, {primary}, {secondary}, {outline}, {back}, "
+        f"{bold}, 0, 0, 0, 100, 100, 0, 0, 1, {outline_w}, {shadow}, 2, 60, 60, {marginv}, 1"
+    )
+    return f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+{style_line}
+WrapStyle: 1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+
+
+def build_ass_with_style(words, start_offset, end_offset, new_text, style):
+    """Build animated ASS from new caption text + style, mapped onto word timings."""
+    header = build_ass_header(style)
+    nw = (new_text or "").split()
+    if not nw:
+        return header
+    n = len(nw)
+
+    if len(words) == n:
+        ranges = [
+            (max(0.0, w["start"] - start_offset), min(end_offset - start_offset, w["end"] - start_offset))
+            for w in words
+        ]
+    else:
+        total = max(0.1, end_offset - start_offset)
+        dur = total / n
+        ranges = [(i * dur, (i + 1) * dur) for i in range(n)]
+
+    grad = style.get("gradient", False)
+    grad_a = style.get("gradient_a", "#ec4899")
+    grad_b = style.get("gradient_b", "#a855f7")
+    primary = hex_to_ass(style.get("primary", "#ffffff"))
+    active = hex_to_ass("#FFFFFF") if grad else hex_to_ass(style.get("secondary", "#ffff00"))
+
+    events = []
+    for i, nwi in enumerate(nw):
+        ws, we = ranges[i]
+        if we <= ws:
+            continue
+        idle = hex_to_ass(lerp_color(grad_a, grad_b, i / max(1, n - 1))) if grad else primary
+        text = (
+            f"{{\\1c{idle}\\t({ws:.2f},{we:.2f},\\1c{active})}}{nwi}"
+        )
+        events.append(
+            f"Dialogue: 0,{fmt_ass_time(ws)},{fmt_ass_time(we)},Word,,0,0,0,,{text}"
+        )
+    return header + "\n".join(events)
+
+
+def rebuild_clip_ass(job_dir, start, end, new_text, style):
+    """Regenerate a clip's ASS from stored transcript words + new text/style."""
+    seg_path = job_dir / "segments.json"
+    if not seg_path.exists():
+        raise RuntimeError("Transcript not found for this job (re-process to enable text editing).")
+    data = json.loads(seg_path.read_text(encoding="utf-8"))
+    segments = data.get("segments", [])
+    window_words = []
+    for seg in segments:
+        if seg["end"] < start or seg["start"] > end:
+            continue
+        for w in (seg.get("words") or []):
+            ws = max(start, w["start"])
+            we = min(end, w["end"])
+            if we > ws:
+                window_words.append({"word": w["word"], "start": ws, "end": we})
+    if not window_words:
+        # Fall back to segment-level text if no word timestamps
+        for seg in segments:
+            if seg["end"] < start or seg["start"] > end:
+                continue
+            window_words.append({"word": seg["text"], "start": max(start, seg["start"]), "end": min(end, seg["end"])})
+    return build_ass_with_style(window_words, start, end, new_text, style)
+
+
 def fmt_srt_time(seconds):
     h = int(seconds // 3600)
     m = int((seconds % 3600) // 60)
@@ -386,6 +500,11 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
 
         emit("transcribing", progress=20)
         segments, language = transcribe(video_path, model_size=whisper_model, language=language)
+        # Persist transcript (incl. word timings) so captions can be re-edited later
+        (job_dir / "segments.json").write_text(
+            json.dumps({"segments": segments, "language": language}, ensure_ascii=False),
+            encoding="utf-8",
+        )
         emit("transcribed", segment_count=len(segments), progress=50)
 
         emit("analyzing", progress=55)
