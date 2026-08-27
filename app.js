@@ -578,6 +578,19 @@ function openEditor(clip) {
   video.src = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
   video.load();
 
+  // Initialise the timeline as soon as duration is known. Metadata usually
+  // loads *before* the clip_data fetch resolves, so we must not rely on a
+  // loadedmetadata listener attached only inside the fetch callback
+  // (it would never fire and tl.dur would stay 0 -> selection/playhead break).
+  const initTL = () => {
+    if (video.duration && isFinite(video.duration) && video.duration > 0) {
+      initTimeline(video.duration);
+      syncZoomUI();
+    }
+  };
+  if (video.readyState >= 1 && video.duration) initTL();
+  else video.addEventListener("loadedmetadata", initTL, { once: true });
+
   fetch(API + "/api/clip_data/" + currentJobId + "/" + encodeURIComponent(clip.filename))
     .then(r => r.json())
     .then(data => {
@@ -595,10 +608,6 @@ function openEditor(clip) {
       const lnEl = document.getElementById("st-length");
       if (lnEl) { lnEl.value = zoomLength; document.getElementById("rv-length").textContent = zoomLength.toFixed(2); }
       syncZoomUI();
-      video.addEventListener("loadedmetadata", () => {
-        initTimeline(video.duration);
-        syncZoomUI();
-      }, { once: true });
       updatePreview();
     })
     .catch(() => {
@@ -855,6 +864,35 @@ function setupTimelineHandlers() {
       }
     }
   });
+
+  // --- CapCut-style draggable playhead (scrub the video) ---
+  const play = document.getElementById("tl-play");
+  if (play) {
+    let scrubbing = false;
+    const scrubTo = (clientX) => {
+      const r = track.getBoundingClientRect();
+      const x = (clientX - r.left) / r.width;
+      const t = Math.max(0, Math.min(tl.dur, x * tl.dur));
+      const v = document.getElementById("editor-video");
+      if (v && v.duration) v.currentTime = t;
+      play.style.left = tlPos(t);
+    };
+    play.addEventListener("pointerdown", (e) => {
+      e.stopPropagation();            // don't start a delete-range selection
+      scrubbing = true;
+      try { play.setPointerCapture(e.pointerId); } catch (_) {}
+      scrubTo(e.clientX);
+      e.preventDefault();
+    });
+    play.addEventListener("pointermove", (e) => { if (scrubbing) scrubTo(e.clientX); });
+    const stopScrub = (e) => {
+      if (!scrubbing) return;
+      scrubbing = false;
+      try { play.releasePointerCapture(e.pointerId); } catch (_) {}
+    };
+    play.addEventListener("pointerup", stopScrub);
+    play.addEventListener("pointercancel", stopScrub);
+  }
 }
 
 function applyStyleToInputs(s) {

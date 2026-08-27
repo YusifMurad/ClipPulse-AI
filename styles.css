@@ -1490,11 +1490,25 @@ h2 {
   position: absolute;
   top: 0;
   bottom: 0;
+  width: 16px;
+  margin-left: -8px;
+  background: transparent;
+  z-index: 7;
+  pointer-events: auto;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.tl-play::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
   width: 2px;
+  margin-left: -1px;
   background: #fff;
   box-shadow: 0 0 6px rgba(255,255,255,0.9);
-  z-index: 6;
-  pointer-events: none;
 }
 
 .tl-play::before {
@@ -1508,6 +1522,7 @@ h2 {
   background: #fff;
   box-shadow: 0 0 6px rgba(0,0,0,0.5);
   transform: translateX(-50%);
+  cursor: ew-resize;
 }
 
 .tl-times {
