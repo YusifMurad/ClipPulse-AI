@@ -118,7 +118,7 @@ window.I18N = {
   "hero_title": "Viral Klipler Oluştur",
   "hero_title_accent": "Saniyeler içinde",
   "hero_sub": "Bir YouTube bağlantısı yapıştırın veya videonuzu yükleyin. Yapay zeka en iyi anları bulur ve bunları paylaşılabilir kliplere dönüştürür.",
-  "tab_youtube": "Gösterilecek sayfa başına ürün sayısı",
+  "tab_youtube": "YouTube Bağlantısı",
   "tab_upload": "Mp4 dosyasını yükle",
   "ph_url": "YouTube URL'sini buraya yapıştırın...",
   "btn_generate": "Klip Oluştur",
@@ -1008,9 +1008,9 @@ window.I18N = {
   "progress_title": "処理...",
   "progress_done": "完了！",
   "progress_error": "エラーが発生しました。",
-  "progress_cutting": "カッティングクリップXPH 0 X/XPH 1 X…",
-  "progress_segments": "XPH 0 Xセグメントが見つかりました",
-  "progress_moments": "XPH 0 Xクリップモーメントが検出されました",
+  "progress_cutting": "カッティングクリップ{cur}/{total}…",
+  "progress_segments": "{n}セグメントが見つかりました",
+  "progress_moments": "{n}クリップモーメントが検出されました",
   "status_starting": "初期化しています…",
   "status_downloading": "ビデオをダウンロードしています...",
   "status_downloaded": "ダウンロードが完了しました。文字起こしを開始します...",
@@ -1097,7 +1097,7 @@ window.I18N = {
   "card_play": "再生",
   "card_pause": "一時停止",
   "tl_cut_title": "削除された範囲-クリックして元に戻す",
-  "tl_times": "期間： XPH 0 X -削除： XPH 1 X （ XPH 2 X ）"
+  "tl_times": "期間： {dur} -削除： {n} （ {cut} ）"
  },
  "ko": {
   "nav_home": "홈",
