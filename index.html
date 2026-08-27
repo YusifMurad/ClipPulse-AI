@@ -222,25 +222,17 @@
             </div>
 
             <div class="timeline-wrap">
+              <div class="tl-toolbar">
+                <button type="button" class="btn-ghost sm" id="tl-split-btn">✂ Böl (Ctrl+B)</button>
+                <button type="button" class="btn-ghost sm" id="tl-del-btn">🗑 Sil (⌫)</button>
+                <span class="tl-hint-text">Playhead'i konumlandır → <b>Ctrl+B</b> ile böl → segmenti seç → <b>⌫</b> ile sil</span>
+              </div>
               <div class="timeline" id="tl-track">
-                <div class="tl-keep" id="tl-keep"></div>
-                <div class="tl-cut" id="tl-cut" style="display:none"></div>
-                <div class="tl-handle tl-in" id="tl-in" data-h="in"><span></span></div>
-                <div class="tl-handle tl-out" id="tl-out" data-h="out"><span></span></div>
-                <div class="tl-handle tl-cutin" id="tl-cutin" data-h="cutin" style="display:none"><span></span></div>
-                <div class="tl-handle tl-cutout" id="tl-cutout" data-h="cutout" style="display:none"><span></span></div>
+                <div class="tl-segs" id="tl-segs"></div>
+                <div class="tl-splits" id="tl-splits"></div>
                 <div class="tl-play" id="tl-play"></div>
               </div>
               <div class="tl-times" id="tl-times"></div>
-              <div class="tl-actions">
-                <button type="button" class="btn-ghost sm" id="tl-toggle-cut">✂ Ortadan kesim bölgesi ekle</button>
-                <span class="tl-hint-text">Mavi = tutulacak kısım · kırmızı = silinecek kısım</span>
-              </div>
-              <div class="tl-num" id="tl-num">
-                <label>Baş <input type="number" id="editor-start" step="0.1" min="0"></label>
-                <label>Bitiş <input type="number" id="editor-end" step="0.1" min="0"></label>
-                <label id="cut-num" style="display:none">Sil: <input type="number" id="editor-cutin" step="0.1" min="0"> – <input type="number" id="editor-cutout" step="0.1" min="0"></label>
-              </div>
             </div>
           </div>
 
@@ -308,6 +300,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=14"></script>
+    <script src="app.js?v=15"></script>
   </body>
 </html>

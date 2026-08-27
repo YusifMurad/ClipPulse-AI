@@ -1330,68 +1330,59 @@ h2 {
   touch-action: none;
 }
 
-.tl-keep {
+.tl-segs {
   position: absolute;
-  top: 4px;
-  bottom: 4px;
-  border-radius: 6px;
-  background: linear-gradient(180deg, rgba(168,85,247,0.85), rgba(236,72,153,0.85));
-  border: 1px solid rgba(255,255,255,0.65);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+  inset: 4px 0;
 }
 
-.tl-cut {
-  position: absolute;
-  top: 4px;
-  bottom: 4px;
-  border-radius: 6px;
-  background: repeating-linear-gradient(45deg, rgba(239,68,68,0.85), rgba(239,68,68,0.85) 7px, rgba(239,68,68,0.5) 7px, rgba(239,68,68,0.5) 14px);
-  border: 1px solid rgba(255,255,255,0.7);
-}
-
-.tl-cut::after {
-  content: "✕ SİL";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 11px;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-  white-space: nowrap;
-}
-
-.tl-handle {
+.tl-seg {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 12px;
-  margin-left: -6px;
-  background: #fff;
-  border-radius: 4px;
-  cursor: ew-resize;
-  box-shadow: 0 0 8px rgba(0,0,0,0.55);
-  z-index: 3;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(168,85,247,0.9), rgba(236,72,153,0.9));
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: filter 0.12s, box-shadow 0.12s;
 }
 
-.tl-handle::after {
-  content: "";
+.tl-seg:hover { filter: brightness(1.12); }
+
+.tl-seg.sel {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px #fff, inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+.tl-seg.del {
+  background: repeating-linear-gradient(45deg, rgba(239,68,68,0.92), rgba(239,68,68,0.92) 7px, rgba(239,68,68,0.5) 7px, rgba(239,68,68,0.5) 14px);
+  border-color: rgba(255,255,255,0.85);
+}
+
+.tl-splits {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2px;
-  height: 20px;
-  background: #7c3aed;
-  border-radius: 2px;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  pointer-events: none;
 }
 
-.tl-in, .tl-out { z-index: 4; background: #ffffff; }
-.tl-in::after, .tl-out::after { background: #6d28d9; }
-.tl-cutin, .tl-cutout { background: #fff; }
-.tl-cutin::after, .tl-cutout::after { background: #ef4444; }
+.tl-split {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  margin-left: -1.5px;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
+.tl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
 
 .tl-play {
   position: absolute;
@@ -1436,35 +1427,6 @@ h2 {
   font-size: 11px;
   color: var(--text-muted);
 }
-
-.tl-num {
-  display: flex;
-  gap: 10px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-}
-
-.tl-num label {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.tl-num input {
-  width: 78px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-family: inherit;
-  outline: none;
-}
-
-.tl-num input:focus { border-color: var(--accent); }
 
 .btn-ghost.sm {
   padding: 8px 12px;

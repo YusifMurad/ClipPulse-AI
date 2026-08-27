@@ -496,9 +496,8 @@ const DEFAULT_STYLE = {
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
 
-// Timeline state (clip-relative seconds)
-let tl = { dur: 0, inRel: 0, outRel: 0, cut: false, cutIn: 0, cutOut: 0 };
-let tlDrag = null;
+// Timeline state (CapCut-style: split points + deleted segments)
+let tl = { dur: 0, splits: [], deleted: [], selected: -1 };
 
 function openEditor(clip) {
   currentEditingClip = clip;
@@ -506,12 +505,10 @@ function openEditor(clip) {
   const video = document.getElementById("editor-video");
   const title = document.getElementById("editor-title");
 
-  // Reset timeline state so no stale cut/trim carries over
-  tl = { dur: 0, inRel: 0, outRel: 0, cut: false, cutIn: 0, cutOut: 0 };
+  // Reset timeline state so no stale splits/deletions carry over
+  tl = { dur: 0, splits: [], deleted: [], selected: -1 };
 
   title.textContent = clip.hook;
-  document.getElementById("editor-start").value = clip.start.toFixed(1);
-  document.getElementById("editor-end").value = clip.end.toFixed(1);
 
   video.src = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
   video.load();
@@ -579,58 +576,24 @@ function collectCues() {
   return cues;
 }
 
+function tlSegs() {
+  const pts = [0, ...tl.splits, tl.dur];
+  const segs = [];
+  for (let i = 0; i < pts.length - 1; i++) segs.push([pts[i], pts[i + 1]]);
+  return segs;
+}
+
 function initTimeline(dur) {
   tl.dur = dur || 0;
-  tl.inRel = 0;
-  tl.outRel = tl.dur;
-  tl.cut = false;
-  tl.cutIn = tl.dur ? tl.dur / 3 : 0;
-  tl.cutOut = tl.dur ? (tl.dur * 2) / 3 : 0;
-  document.getElementById("tl-cut").style.display = "none";
-  document.getElementById("tl-cutin").style.display = "none";
-  document.getElementById("tl-cutout").style.display = "none";
-  document.getElementById("cut-num").style.display = "none";
-  document.getElementById("tl-toggle-cut").textContent = "✂ Ortadan kesim bölgesi ekle";
+  tl.splits = [];
+  tl.deleted = [];
+  tl.selected = -1;
   updateTimelineUI();
 }
 
 function tlPos(t) {
   if (!tl.dur) return "0%";
   return ((t / tl.dur) * 100).toFixed(2) + "%";
-}
-
-function updateTimelineUI() {
-  const keep = document.getElementById("tl-keep");
-  const cut = document.getElementById("tl-cut");
-  keep.style.left = tlPos(tl.inRel);
-  keep.style.width = `calc(${tlPos(tl.outRel)} - ${tlPos(tl.inRel)})`;
-  document.getElementById("tl-in").style.left = tlPos(tl.inRel);
-  document.getElementById("tl-out").style.left = tlPos(tl.outRel);
-  if (tl.cut) {
-    cut.style.display = "block";
-    cut.style.left = tlPos(tl.cutIn);
-    cut.style.width = `calc(${tlPos(tl.cutOut)} - ${tlPos(tl.cutIn)})`;
-    document.getElementById("tl-cutin").style.display = "block";
-    document.getElementById("tl-cutout").style.display = "block";
-    document.getElementById("tl-cutin").style.left = tlPos(tl.cutIn);
-    document.getElementById("tl-cutout").style.left = tlPos(tl.cutOut);
-  }
-  const v = document.getElementById("editor-video");
-  if (v && v.duration) {
-    document.getElementById("tl-play").style.left = tlPos(v.currentTime);
-  }
-  // time labels
-  const base = currentEditingClip ? currentEditingClip.start : 0;
-  document.getElementById("tl-times").textContent =
-    `Tutulan: ${fmtT(base + tl.inRel)} → ${fmtT(base + tl.outRel)}` +
-    (tl.cut ? `  ·  Silinen: ${fmtT(base + tl.cutIn)} → ${fmtT(base + tl.cutOut)}` : "");
-  // number inputs (absolute source seconds)
-  document.getElementById("editor-start").value = (base + tl.inRel).toFixed(1);
-  document.getElementById("editor-end").value = (base + tl.outRel).toFixed(1);
-  if (tl.cut) {
-    document.getElementById("editor-cutin").value = (base + tl.cutIn).toFixed(1);
-    document.getElementById("editor-cutout").value = (base + tl.cutOut).toFixed(1);
-  }
 }
 
 function fmtT(s) {
@@ -640,72 +603,95 @@ function fmtT(s) {
   return `${m}:${sec.padStart(4, "0")}`;
 }
 
+function updateTimelineUI() {
+  const segsLayer = document.getElementById("tl-segs");
+  const splitsLayer = document.getElementById("tl-splits");
+  segsLayer.innerHTML = "";
+  splitsLayer.innerHTML = "";
+  const segs = tlSegs();
+  segs.forEach((seg, i) => {
+    const d = document.createElement("div");
+    d.className = "tl-seg" + (tl.deleted.includes(i) ? " del" : "") + (tl.selected === i ? " sel" : "");
+    d.style.left = tlPos(seg[0]);
+    d.style.width = `calc(${tlPos(seg[1])} - ${tlPos(seg[0])})`;
+    d.addEventListener("click", (e) => {
+      e.stopPropagation();
+      tl.selected = i;
+      const v = document.getElementById("editor-video");
+      if (v && v.duration) v.currentTime = (seg[0] + seg[1]) / 2;
+      updateTimelineUI();
+    });
+    segsLayer.appendChild(d);
+  });
+  tl.splits.forEach(s => {
+    const d = document.createElement("div");
+    d.className = "tl-split";
+    d.style.left = tlPos(s);
+    splitsLayer.appendChild(d);
+  });
+  const v = document.getElementById("editor-video");
+  if (v && v.duration) document.getElementById("tl-play").style.left = tlPos(v.currentTime);
+  document.getElementById("tl-times").textContent =
+    `Süre: ${fmtT(tl.dur)}  ·  Parça: ${segs.length}  ·  Silinen: ${tl.deleted.length}`;
+}
+
+function tlSplitAt(t) {
+  t = Math.max(0.05, Math.min(tl.dur - 0.05, t));
+  if (t <= 0.05 || t >= tl.dur - 0.05) return;
+  if (tl.splits.some(s => Math.abs(s - t) < 0.05)) return;
+  tl.splits.push(t);
+  tl.splits.sort((a, b) => a - b);
+  updateTimelineUI();
+}
+
+function tlToggleDelete() {
+  if (tl.selected < 0) return;
+  const i = tl.selected;
+  if (tl.deleted.includes(i)) tl.deleted = tl.deleted.filter(x => x !== i);
+  else tl.deleted.push(i);
+  updateTimelineUI();
+}
+
 function setupTimelineHandlers() {
   const track = document.getElementById("tl-track");
 
-  function tFromEvent(e) {
+  // Click empty track area to seek the playhead
+  track.addEventListener("pointerdown", (e) => {
+    if (e.target.classList.contains("tl-seg") || e.target.classList.contains("tl-split")) return;
     const r = track.getBoundingClientRect();
-    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    return Math.min(tl.dur, Math.max(0, (x / r.width) * tl.dur));
-  }
-
-  function onMove(e) {
-    if (!tlDrag) return;
-    const t = tFromEvent(e);
-    if (tlDrag === "in") tl.inRel = Math.min(t, tl.outRel - 0.2);
-    else if (tlDrag === "out") tl.outRel = Math.max(t, tl.inRel + 0.2);
-    else if (tlDrag === "cutin") tl.cutIn = Math.min(Math.max(t, tl.inRel), tl.cutOut - 0.2);
-    else if (tlDrag === "cutout") tl.cutOut = Math.max(Math.min(t, tl.outRel), tl.cutIn + 0.2);
-    updateTimelineUI();
-    e.preventDefault();
-  }
-  function onUp() {
-    tlDrag = null;
-    document.removeEventListener("pointermove", onMove);
-    document.removeEventListener("pointerup", onUp);
-  }
-
-  ["tl-in", "tl-out", "tl-cutin", "tl-cutout"].forEach(id => {
-    document.getElementById(id)?.addEventListener("pointerdown", e => {
-      tlDrag = document.getElementById(id).dataset.h;
-      document.addEventListener("pointermove", onMove);
-      document.addEventListener("pointerup", onUp);
-      e.preventDefault();
-      e.stopPropagation();
-    });
-  });
-
-  // Click on track to seek
-  track.addEventListener("pointerdown", e => {
-    if (e.target.classList.contains("tl-handle")) return;
+    const x = e.clientX - r.left;
     const v = document.getElementById("editor-video");
-    if (v && v.duration) { v.currentTime = tFromEvent(e); updateTimelineUI(); }
+    if (v && v.duration) {
+      v.currentTime = Math.min(tl.dur, Math.max(0, (x / r.width) * tl.dur));
+      updateTimelineUI();
+    }
   });
 
   document.getElementById("editor-video")?.addEventListener("timeupdate", () => {
-    document.getElementById("tl-play").style.left = tlPos(document.getElementById("editor-video").currentTime);
+    document.getElementById("tl-play").style.left =
+      tlPos(document.getElementById("editor-video").currentTime);
   });
 
-  // Sync from number inputs
-  document.getElementById("editor-start")?.addEventListener("input", e => {
-    const base = currentEditingClip ? currentEditingClip.start : 0;
-    tl.inRel = Math.min(parseFloat(e.target.value) - base, tl.outRel - 0.2);
-    updateTimelineUI();
+  document.getElementById("tl-split-btn")?.addEventListener("click", () => {
+    const v = document.getElementById("editor-video");
+    tlSplitAt(v ? v.currentTime : 0);
   });
-  document.getElementById("editor-end")?.addEventListener("input", e => {
-    const base = currentEditingClip ? currentEditingClip.start : 0;
-    tl.outRel = Math.max(parseFloat(e.target.value) - base, tl.inRel + 0.2);
-    updateTimelineUI();
-  });
-  document.getElementById("tl-toggle-cut")?.addEventListener("click", () => {
-    tl.cut = !tl.cut;
-    document.getElementById("tl-cut").style.display = tl.cut ? "block" : "none";
-    document.getElementById("tl-cutin").style.display = tl.cut ? "block" : "none";
-    document.getElementById("tl-cutout").style.display = tl.cut ? "block" : "none";
-    document.getElementById("cut-num").style.display = tl.cut ? "flex" : "none";
-    document.getElementById("tl-toggle-cut").textContent = tl.cut
-      ? "✂ Kesim bölgesini kaldır" : "✂ Ortadan kesim bölgesi ekle";
-    updateTimelineUI();
+  document.getElementById("tl-del-btn")?.addEventListener("click", tlToggleDelete);
+
+  // Keyboard: Ctrl/Cmd+B split at playhead · Backspace/Delete toggles delete
+  document.addEventListener("keydown", (e) => {
+    const modal = document.getElementById("editor-modal");
+    if (!modal || modal.style.display !== "flex") return;
+    if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
+      e.preventDefault();
+      const v = document.getElementById("editor-video");
+      tlSplitAt(v ? v.currentTime : 0);
+    } else if (e.key === "Backspace" || e.key === "Delete") {
+      if (tl.selected >= 0) {
+        e.preventDefault();
+        tlToggleDelete();
+      }
+    }
   });
 }
 
@@ -836,17 +822,22 @@ function setupEditor() {
     const cues = collectCues();
     const effect = document.getElementById("st-effect")?.value || "none";
 
-    const base = currentEditingClip.start;
+    // Build cut list from deleted segments (clip-relative seconds)
+    const segs = tlSegs();
+    const cuts = [];
+    tl.deleted.forEach(i => {
+      if (segs[i]) cuts.push([+segs[i][0].toFixed(3), +segs[i][1].toFixed(3)]);
+    });
+
     const payload = {
-      start: base + tl.inRel,
-      end: base + tl.outRel,
+      start: 0,
+      end: tl.dur,
+      dur: tl.dur,
       effect: effect,
       cues: cues,
       style: style
     };
-    if (tl.cut) {
-      payload.cuts = [[base + tl.cutIn, base + tl.cutOut]];
-    }
+    if (cuts.length) payload.cuts = cuts;
 
     try {
       const r = await fetch(API + "/api/update_clip/" + currentJobId + "/" + encodeURIComponent(currentEditingClip.filename), {

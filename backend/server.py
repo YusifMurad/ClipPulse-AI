@@ -63,6 +63,13 @@ def load_persisted(job_id):
             pass
     return False
 
+
+def _ass_sec(t):
+    """Parse ASS timestamp 'h:mm:ss.cc' to seconds."""
+    h, m, rest = t.split(":")
+    s, cs = rest.split(".")
+    return int(h) * 3600 + int(m) * 60 + int(s) + int(cs) / 100.0
+
 # --- Temizlik ---
 def cleanup():
     print("Sunucu kapanıyor.")
@@ -209,10 +216,8 @@ def get_clip_data(job_id, filename):
     if not job_dir.exists():
         return jsonify({"error": "Job not found"}), 404
     
-    # Find source video
+    # Source video (may be gone after cleanup; editing works off the clip file)
     source = list(job_dir.glob("source.*"))
-    if not source:
-        return jsonify({"error": "Source video not found"}), 404
     
     ass_path = job_dir / (filename + ".ass")
     ass_content = ""
@@ -230,22 +235,31 @@ def get_clip_data(job_id, filename):
             plain_text += txt.strip() + " "
     plain_text = plain_text.strip()
 
-    # Editable subtitle cues (clip-relative seconds) for the cue-list editor
-    cues = []
-    seg_path = job_dir / "segments.json"
-    if seg_path.exists():
+    # Editable subtitle cues: prefer the sidecar the user last edited (clean
+    # re-edit); otherwise parse them back from the current clip's ASS.
+    cues = None
+    cues_path = job_dir / (filename + ".cues.json")
+    if cues_path.exists():
         try:
-            from pipeline import extract_cues
-            seg_data = json.loads(seg_path.read_text(encoding="utf-8"))
-            load_persisted(job_id)
-            clip_meta = next(
-                (c for c in jobs.get(job_id, {}).get("result", {}).get("clips", [])
-                 if c.get("filename") == filename), {})
-            cstart = clip_meta.get("start", 0)
-            cend = clip_meta.get("end", 0)
-            cues = extract_cues(seg_data.get("segments", []), cstart, cend)
+            cues = json.loads(cues_path.read_text(encoding="utf-8"))
         except Exception:
-            cues = []
+            cues = None
+    if not isinstance(cues, list) or not cues:
+        import re as _re2
+        cues = []
+        for line in ass_content.splitlines():
+            if line.startswith("Dialogue:"):
+                parts = line.split(",", 9)
+                if len(parts) < 10:
+                    continue
+                try:
+                    st = _ass_sec(parts[1])
+                    en = _ass_sec(parts[2])
+                except Exception:
+                    continue
+                txt = _re2.sub(r"\{[^}]*\}", "", parts[9]).strip()
+                if txt:
+                    cues.append({"start": round(st, 3), "end": round(en, 3), "text": txt})
 
     # Current style parsed from the ASS Style line (so editor starts with real values)
     current_style = {}
@@ -283,7 +297,7 @@ def get_clip_data(job_id, filename):
     clip_meta = next((c for c in job_data.get("clips", []) if c["filename"] == filename), {})
 
     return jsonify({
-        "source": str(source[0]),
+        "source": str(source[0]) if source else "",
         "filename": filename,
         "ass_content": ass_content,
         "plain_text": plain_text,
@@ -303,12 +317,16 @@ def update_clip(job_id, filename):
     if not job_dir.exists():
         return jsonify({"error": "Job not found"}), 404
 
-    source = list(job_dir.glob("source.*"))
-    if not source:
-        return jsonify({"error": "Source video not found"}), 404
+    load_persisted(job_id)
 
-    start = float(data.get("start", 0))
-    end = float(data.get("end", 0))
+    # Editing operates on the CURRENT clip file (self-contained, no source needed)
+    clip_path = job_dir / filename
+    if not clip_path.exists():
+        return jsonify({"error": "Clip video not found"}), 404
+
+    dur = float(data.get("dur") or 0) or (
+        float(data.get("end", 0)) - float(data.get("start", 0)))
+    start, end = 0.0, dur
     ass_content = data.get("ass_content", "")
 
     # Build ASS from the user's cue list (exact times + text) when provided
@@ -331,24 +349,20 @@ def update_clip(job_id, filename):
     effect = data.get("effect", "none")
     cuts = data.get("cuts") or []
 
-    # If a new caption + style is provided, regenerate the ASS from the transcript
-    text = data.get("text")
-    style = data.get("style")
-    if text is not None and style is not None:
-        try:
-            ass_content = rebuild_clip_ass(job_dir, start, end, text, style)
-        except Exception as e:
-            return jsonify({"error": "Subtitle rebuild failed: " + str(e)}), 500
-
     try:
-        recut_clip(str(source[0]), job_dir, filename, start, end, ass_content,
+        recut_clip(str(clip_path), job_dir, filename, start, end, ass_content,
                    effect=effect, cuts=cuts)
-        # Keep clip metadata in sync so re-editing shows correct bounds
-        job_data = jobs.get(job_id, {}).get("result", {})
-        for c in job_data.get("clips", []):
+        # Persist the user's last-edited cues in a sidecar so re-editing is clean
+        # (clip-relative). After a cut the clip changes, so fall back to ASS parsing.
+        cues_path = job_dir / (filename + ".cues.json")
+        if cuts:
+            cues_path.unlink(missing_ok=True)
+        elif isinstance(cues, list):
+            cues_path.write_text(json.dumps(cues, ensure_ascii=False), encoding="utf-8")
+        # Keep effect in sync for re-editing
+        load_persisted(job_id)
+        for c in jobs.get(job_id, {}).get("result", {}).get("clips", []):
             if c.get("filename") == filename:
-                c["start"] = start
-                c["end"] = end
                 c["effect"] = effect
                 break
         persist_job(job_id)

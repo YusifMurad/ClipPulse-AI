@@ -636,9 +636,13 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
         "-c:v", "libx264", "-preset", "fast", "-crf", "23",
         "-c:a", "aac", "-b:a", "128k",
         "-movflags", "+faststart",
-        str(output_path),
+        str(output_path) + ".tmp.mp4",
     ]
     subprocess.run(cmd, capture_output=True, check=True)
+    # Write to a temp then replace: avoids truncating the input when
+    # output_path == video_path (in-place re-edit of an existing clip).
+    import os
+    os.replace(str(output_path) + ".tmp.mp4", str(output_path))
 
 
 def srt_path_escape(p):
