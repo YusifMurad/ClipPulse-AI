@@ -513,25 +513,42 @@ def _probe_fps(video_path):
         return 30.0
 
 
-def build_zoom_filter(effect, w, h, duration, fps):
-    """Return a ffmpeg zoompan filter string for the given effect (or '' for none)."""
+def build_zoom_filter(effect, w, h, duration, fps, focus=(0.5, 0.5), strength=1.3, length_frac=1.0):
+    """Return a ffmpeg zoompan filter for the given effect (or '' for none).
+
+    focus: (fx, fy) normalized point (0..1) the zoom centers on.
+    strength: max zoom factor (>=1).
+    length_frac: fraction of the clip the zoom animation ramps over (then holds).
+    """
     if effect in (None, "none", ""):
         return ""
-    total = max(1.0, duration * fps)
-    intro = max(1, int(1.2 * fps))  # punchy intro length in frames
-    exprs = {
-        # Continuous, clearly visible push/pull across the whole clip
-        "zoom-in": f"1.05 + 0.18*(in/{total:.0f})",
-        "zoom-out": f"1.23 - 0.18*(in/{total:.0f})",
-        "ken-burns": f"1.0 + 0.16*(in/{total:.0f})",
-        # Punchy intro bounce, then settle
-        "pop": f"1.0 + 0.18*sin(3.14159*min(in,{intro})/{intro})",
-    }
-    z = exprs.get(effect)
-    if not z:
-        return ""
+    fx, fy = focus if isinstance(focus, (list, tuple)) and len(focus) == 2 else (0.5, 0.5)
+    try:
+        fx = max(0.0, min(1.0, float(fx)))
+        fy = max(0.0, min(1.0, float(fy)))
+    except Exception:
+        fx, fy = 0.5, 0.5
+    try:
+        strength = max(1.0, float(strength))
+    except Exception:
+        strength = 1.3
+    try:
+        length_frac = max(0.05, min(1.0, float(length_frac)))
+    except Exception:
+        length_frac = 1.0
+    fps = max(1.0, fps)
+    span = max(1, int(length_frac * max(0.1, duration) * fps))
+    p = f"min(in,{span})/{span}"
+    if effect == "zoom-out":
+        z = f"{strength:.4f} - ({strength:.4f} - 1.0)*({p})"
+    elif effect == "pop":
+        z = f"1.0 + ({strength:.4f} - 1.0)*sin(3.14159*{p})"
+    else:  # zoom-in / ken-burns (continuous push centered on focus)
+        z = f"1.0 + ({strength:.4f} - 1.0)*({p})"
+    x = f"max(0, min(iw - iw/zoom, {fx:.4f}*iw - (iw/zoom)/2))"
+    y = f"max(0, min(ih - ih/zoom, {fy:.4f}*ih - (ih/zoom)/2))"
     return (f"zoompan=z='{z}':d=1:s={w}x{h}:fps={fps:.0f}"
-            f":x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)'")
+            f":x='{x}':y='{y}'")
 
 
 def _ass_to_sec(t):
@@ -579,7 +596,8 @@ def retime_ass(ass_text, cuts_relative):
     return "\n".join(out)
 
 
-def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None, effect="none", fps=None):
+def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None, effect="none",
+             focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None):
     """Cut clip, crop to 9:16, burn (animated) subtitles, and create thumbnail."""
     duration = end - start
 
@@ -619,7 +637,8 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     zoom = ""
     if effect not in (None, "none", ""):
         fps = fps or _probe_fps(video_path)
-        zoom = build_zoom_filter(effect, 1080, 1920, duration, fps)
+        zoom = build_zoom_filter(effect, 1080, 1920, duration, fps,
+                                 focus=focus, strength=strength, length_frac=length_frac)
     crop_part = "crop=1080:1920"
     vf_parts = [f"scale=1080:1920:force_original_aspect_ratio=increase", crop_part]
     if zoom:
@@ -649,7 +668,8 @@ def srt_path_escape(p):
     return p.replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
 
 
-def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effect="none", cuts=None, fps=None):
+def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effect="none", cuts=None,
+               focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None):
     """Re-cut an existing clip with new timings, optional cut-out regions and subtitles."""
     import shutil
     clip_output = job_dir / clip_name
@@ -668,7 +688,7 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
 
     if not rel_cuts:
         cut_clip(video_path, start, end, None, clip_output, ass_content=new_ass_content,
-                 effect=effect, fps=fps)
+                 effect=effect, focus=focus, strength=strength, length_frac=length_frac, fps=fps)
         return True
 
     # Build the kept segments (everything outside the cut regions)
@@ -715,7 +735,8 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
 
         kept_duration = (end - start) - sum(b - a for a, b in rel_cuts)
         cut_clip(str(concat_path), 0, kept_duration, None, clip_output,
-                 ass_content=new_ass_content, effect=effect, fps=fps)
+                 ass_content=new_ass_content, effect=effect, focus=focus,
+                 strength=strength, length_frac=length_frac, fps=fps)
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
     return True

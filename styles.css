@@ -1024,6 +1024,7 @@ h2 {
   position: absolute;
   top: 10px;
   left: 10px;
+  z-index: 5;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -1033,6 +1034,72 @@ h2 {
   padding: 4px 8px;
   border-radius: 999px;
   backdrop-filter: blur(6px);
+}
+
+.zoom-focus {
+  position: absolute;
+  border: 2px dashed rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+  z-index: 4;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.zoom-focus::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)) center/100% 1px no-repeat,
+    linear-gradient(rgba(255,255,255,0.6), rgba(255,255,255,0.6)) center/1px 100% no-repeat;
+  pointer-events: none;
+}
+
+.zoom-focus:active { cursor: grabbing; }
+
+.zoom-focus .zf-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+}
+
+.zoom-focus .zf-label {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #fff;
+  background: rgba(0,0,0,0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.zoom-controls {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.zoom-controls .style-row { margin-bottom: 8px; }
+.zoom-controls .rv { min-width: 36px; text-align: right; }
+
+.zoom-hint {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted);
 }
 
 .field-label {

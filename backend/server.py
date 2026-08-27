@@ -235,13 +235,22 @@ def get_clip_data(job_id, filename):
             plain_text += txt.strip() + " "
     plain_text = plain_text.strip()
 
-    # Editable subtitle cues: prefer the sidecar the user last edited (clean
-    # re-edit); otherwise parse them back from the current clip's ASS.
+    # Editable subtitle cues + zoom params: prefer the sidecar the user last
+    # edited (clean re-edit); otherwise parse cues back from the current ASS.
     cues = None
-    cues_path = job_dir / (filename + ".cues.json")
-    if cues_path.exists():
+    focus = [0.5, 0.5]
+    strength = 1.3
+    length_frac = 1.0
+    edit_path = job_dir / (filename + ".edit.json")
+    if edit_path.exists():
         try:
-            cues = json.loads(cues_path.read_text(encoding="utf-8"))
+            ed = json.loads(edit_path.read_text(encoding="utf-8"))
+            if isinstance(ed.get("cues"), list):
+                cues = ed["cues"]
+            if isinstance(ed.get("focus"), list) and len(ed["focus"]) == 2:
+                focus = [float(ed["focus"][0]), float(ed["focus"][1])]
+            strength = float(ed.get("strength", strength))
+            length_frac = float(ed.get("length", length_frac))
         except Exception:
             cues = None
     if not isinstance(cues, list) or not cues:
@@ -302,6 +311,9 @@ def get_clip_data(job_id, filename):
         "ass_content": ass_content,
         "plain_text": plain_text,
         "cues": cues,
+        "focus": focus,
+        "strength": strength,
+        "length": length_frac,
         "current_style": current_style,
         "effect": clip_meta.get("effect", "none"),
         "start": clip_meta.get("start", 0),
@@ -348,17 +360,29 @@ def update_clip(job_id, filename):
                 return jsonify({"error": "Subtitle rebuild failed: " + str(e)}), 500
     effect = data.get("effect", "none")
     cuts = data.get("cuts") or []
+    focus = data.get("focus") or [0.5, 0.5]
+    strength = float(data.get("strength", 1.3) or 1.3)
+    length_frac = float(data.get("length", 1.0) or 1.0)
 
     try:
         recut_clip(str(clip_path), job_dir, filename, start, end, ass_content,
-                   effect=effect, cuts=cuts)
-        # Persist the user's last-edited cues in a sidecar so re-editing is clean
-        # (clip-relative). After a cut the clip changes, so fall back to ASS parsing.
-        cues_path = job_dir / (filename + ".cues.json")
+                   effect=effect, cuts=cuts, focus=focus, strength=strength,
+                   length_frac=length_frac)
+        # Persist the user's last edit (cues + zoom params) in a sidecar so
+        # re-editing is clean (clip-relative). After a cut the clip changes, so
+        # fall back to ASS parsing and editor defaults.
+        edit_path = job_dir / (filename + ".edit.json")
         if cuts:
-            cues_path.unlink(missing_ok=True)
-        elif isinstance(cues, list):
-            cues_path.write_text(json.dumps(cues, ensure_ascii=False), encoding="utf-8")
+            edit_path.unlink(missing_ok=True)
+        else:
+            edit_data = {
+                "cues": cues if isinstance(cues, list) else [],
+                "focus": focus,
+                "strength": strength,
+                "length": length_frac,
+                "effect": effect,
+            }
+            edit_path.write_text(json.dumps(edit_data, ensure_ascii=False), encoding="utf-8")
         # Keep effect in sync for re-editing
         load_persisted(job_id)
         for c in jobs.get(job_id, {}).get("result", {}).get("clips", []):

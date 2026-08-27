@@ -499,6 +499,9 @@ const DEFAULT_STYLE = {
 // Timeline state (CapCut-style: split points + deleted segments)
 let tl = { dur: 0, splits: [], deleted: [], selected: -1 };
 
+// Zoom/pan state (draggable focus + strength + animation length)
+let zoomFx = 0.5, zoomFy = 0.5, zoomStrength = 1.3, zoomLength = 1.0;
+
 function openEditor(clip) {
   currentEditingClip = clip;
   const modal = document.getElementById("editor-modal");
@@ -522,8 +525,20 @@ function openEditor(clip) {
       applyStyleToInputs(s);
       const fx = document.getElementById("st-effect");
       if (fx) fx.value = data.effect || "none";
+      // Zoom/pan state
+      const f = data.focus || [0.5, 0.5];
+      zoomFx = Math.max(0, Math.min(1, +f[0] || 0.5));
+      zoomFy = Math.max(0, Math.min(1, +f[1] || 0.5));
+      zoomStrength = +data.strength || 1.3;
+      zoomLength = +data.length || 1.0;
+      const stEl = document.getElementById("st-strength");
+      const lnEl = document.getElementById("st-length");
+      if (stEl) { stEl.value = zoomStrength; document.getElementById("rv-strength").textContent = zoomStrength.toFixed(2); }
+      if (lnEl) { lnEl.value = zoomLength; document.getElementById("rv-length").textContent = zoomLength.toFixed(2); }
+      syncZoomUI();
       video.addEventListener("loadedmetadata", () => {
         initTimeline(video.duration);
+        syncZoomUI();
       }, { once: true });
       updatePreview();
     })
@@ -534,6 +549,82 @@ function openEditor(clip) {
     });
 
   modal.style.display = "flex";
+}
+
+function syncZoomUI() {
+  const effect = document.getElementById("st-effect")?.value || "none";
+  const controls = document.getElementById("zoom-controls");
+  const box = document.getElementById("zoom-focus");
+  const show = effect !== "none";
+  if (controls) controls.style.display = show ? "block" : "none";
+  if (!box) return;
+  box.style.display = show ? "flex" : "none";
+  if (!show) {
+    const v = document.getElementById("editor-video");
+    if (v) v.style.transform = "";
+    return;
+  }
+  const sizePct = 100 / zoomStrength;
+  box.style.width = sizePct + "%";
+  box.style.height = sizePct + "%";
+  box.style.left = (zoomFx * 100) + "%";
+  box.style.top = (zoomFy * 100) + "%";
+  box.style.transform = "translate(-50%, -50%)";
+  applyZoomPreview();
+}
+
+function applyZoomPreview() {
+  const v = document.getElementById("editor-video");
+  if (!v) return;
+  const effect = document.getElementById("st-effect")?.value || "none";
+  if (effect === "none" || !v.duration) { v.style.transform = ""; return; }
+  const dur = v.duration;
+  const t = v.currentTime || 0;
+  const span = Math.max(0.001, zoomLength * dur);
+  const p = Math.min(1, t / span);
+  let z;
+  if (effect === "zoom-out") z = zoomStrength - (zoomStrength - 1) * p;
+  else if (effect === "pop") z = 1 + (zoomStrength - 1) * Math.sin(Math.PI * p);
+  else z = 1 + (zoomStrength - 1) * p; // zoom-in / ken-burns
+  v.style.transformOrigin = (zoomFx * 100) + "% " + (zoomFy * 100) + "%";
+  v.style.transform = `translate(${(0.5 - zoomFx) * 100}%, ${(0.5 - zoomFy) * 100}%) scale(${z})`;
+}
+
+function setupZoomHandlers() {
+  const box = document.getElementById("zoom-focus");
+  const frame = box ? box.parentElement : null;
+  if (!box || !frame) return;
+  let dragging = false;
+  box.addEventListener("pointerdown", (e) => {
+    dragging = true;
+    try { box.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+  });
+  box.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const r = frame.getBoundingClientRect();
+    zoomFx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    zoomFy = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+    box.style.left = (zoomFx * 100) + "%";
+    box.style.top = (zoomFy * 100) + "%";
+    applyZoomPreview();
+  });
+  const stop = (e) => { dragging = false; try { box.releasePointerCapture(e.pointerId); } catch (_) {} };
+  box.addEventListener("pointerup", stop);
+  box.addEventListener("pointercancel", stop);
+
+  document.getElementById("st-strength")?.addEventListener("input", (e) => {
+    zoomStrength = +e.target.value;
+    document.getElementById("rv-strength").textContent = zoomStrength.toFixed(2);
+    syncZoomUI();
+  });
+  document.getElementById("st-length")?.addEventListener("input", (e) => {
+    zoomLength = +e.target.value;
+    document.getElementById("rv-length").textContent = zoomLength.toFixed(2);
+    applyZoomPreview();
+  });
+  document.getElementById("st-effect")?.addEventListener("change", syncZoomUI);
+  document.getElementById("editor-video")?.addEventListener("timeupdate", applyZoomPreview);
 }
 
 function renderCues(cues) {
@@ -782,6 +873,7 @@ function setupEditor() {
   });
 
   setupTimelineHandlers();
+  setupZoomHandlers();
 
   // Live preview bindings
   ["st-primary","st-secondary","st-outline","st-back","st-fontsize","st-outline_w",
@@ -834,6 +926,9 @@ function setupEditor() {
       end: tl.dur,
       dur: tl.dur,
       effect: effect,
+      focus: [+zoomFx.toFixed(4), +zoomFy.toFixed(4)],
+      strength: zoomStrength,
+      length: zoomLength,
       cues: cues,
       style: style
     };
