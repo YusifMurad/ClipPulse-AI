@@ -1319,11 +1319,11 @@ h2 {
 
 .timeline {
   position: relative;
-  height: 46px;
+  height: 52px;
   background:
-    repeating-linear-gradient(90deg, #1a1030, #1a1030 1px, #21143c 1px, #21143c 40px);
-  border-radius: 8px;
-  border: 1px solid var(--border);
+    repeating-linear-gradient(90deg, #140a26, #140a26 1px, #1c1033 1px, #1c1033 40px);
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
   cursor: pointer;
   overflow: hidden;
   user-select: none;
@@ -1332,32 +1332,47 @@ h2 {
 
 .tl-keep {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  background: linear-gradient(180deg, rgba(168,85,247,0.55), rgba(236,72,153,0.55));
-  border-left: 2px solid #fff;
-  border-right: 2px solid #fff;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(168,85,247,0.85), rgba(236,72,153,0.85));
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
 }
 
 .tl-cut {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(45deg, rgba(239,68,68,0.75), rgba(239,68,68,0.75) 6px, rgba(239,68,68,0.45) 6px, rgba(239,68,68,0.45) 12px);
-  border-left: 2px solid #fff;
-  border-right: 2px solid #fff;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, rgba(239,68,68,0.85), rgba(239,68,68,0.85) 7px, rgba(239,68,68,0.5) 7px, rgba(239,68,68,0.5) 14px);
+  border: 1px solid rgba(255,255,255,0.7);
+}
+
+.tl-cut::after {
+  content: "✕ SİL";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
 }
 
 .tl-handle {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 14px;
-  margin-left: -7px;
+  width: 12px;
+  margin-left: -6px;
   background: #fff;
   border-radius: 4px;
   cursor: ew-resize;
-  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  box-shadow: 0 0 8px rgba(0,0,0,0.55);
   z-index: 3;
 }
 
@@ -1367,14 +1382,15 @@ h2 {
   top: 50%;
   left: 50%;
   width: 2px;
-  height: 18px;
+  height: 20px;
   background: #7c3aed;
+  border-radius: 2px;
   transform: translate(-50%, -50%);
 }
 
-.tl-in, .tl-out { z-index: 4; }
-.tl-cutin { background: #fff; }
-.tl-cutout { background: #fff; }
+.tl-in, .tl-out { z-index: 4; background: #ffffff; }
+.tl-in::after, .tl-out::after { background: #6d28d9; }
+.tl-cutin, .tl-cutout { background: #fff; }
 .tl-cutin::after, .tl-cutout::after { background: #ef4444; }
 
 .tl-play {
@@ -1382,10 +1398,23 @@ h2 {
   top: 0;
   bottom: 0;
   width: 2px;
-  background: #22d3ee;
-  box-shadow: 0 0 6px #22d3ee;
-  z-index: 5;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255,255,255,0.9);
+  z-index: 6;
   pointer-events: none;
+}
+
+.tl-play::before {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,0.5);
+  transform: translateX(-50%);
 }
 
 .tl-times {

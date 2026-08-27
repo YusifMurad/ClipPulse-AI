@@ -536,7 +536,7 @@ function openEditor(clip) {
       updatePreview();
     });
 
-  modal.style.display = "block";
+  modal.style.display = "flex";
 }
 
 function renderCues(cues) {

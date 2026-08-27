@@ -518,11 +518,14 @@ def build_zoom_filter(effect, w, h, duration, fps):
     if effect in (None, "none", ""):
         return ""
     total = max(1.0, duration * fps)
+    intro = max(1, int(1.2 * fps))  # punchy intro length in frames
     exprs = {
-        "zoom-in": f"min(1.14, 1.0 + 0.14*(in/{total:.0f}))",
-        "zoom-out": f"max(1.0, 1.14 - 0.14*(in/{total:.0f}))",
-        "ken-burns": f"1.0 + 0.14*(in/{total:.0f})",
-        "pop": f"1.0 + 0.16*sin(3.14159*(in/{total:.0f}))",
+        # Continuous, clearly visible push/pull across the whole clip
+        "zoom-in": f"1.05 + 0.18*(in/{total:.0f})",
+        "zoom-out": f"1.23 - 0.18*(in/{total:.0f})",
+        "ken-burns": f"1.0 + 0.16*(in/{total:.0f})",
+        # Punchy intro bounce, then settle
+        "pop": f"1.0 + 0.18*sin(3.14159*min(in,{intro})/{intro})",
     }
     z = exprs.get(effect)
     if not z:
