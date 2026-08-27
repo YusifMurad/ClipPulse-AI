@@ -10,6 +10,11 @@ const BACKEND_URL = "http://127.0.0.1:5555";
 const isDev = !app.isPackaged;
 
 function findPython() {
+  if (process.platform === "win32") {
+    const venvPython = path.join(__dirname, "..", "backend", "venv", "Scripts", "python.exe");
+    if (fs.existsSync(venvPython)) return venvPython;
+    return "python";
+  }
   const venvPython = path.join(__dirname, "..", "backend", "venv", "bin", "python3");
   if (fs.existsSync(venvPython)) return venvPython;
   return "python3";

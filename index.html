@@ -30,22 +30,22 @@
         <nav class="sidebar-nav">
           <button class="nav-btn active" data-view="home">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span>Home</span>
+            <span data-i18n="nav_home">Home</span>
           </button>
           <button class="nav-btn" data-view="history">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>History</span>
+            <span data-i18n="nav_history">History</span>
           </button>
         </nav>
 
         <div class="sidebar-bottom">
           <button class="nav-btn" data-view="settings">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-            <span>Settings</span>
+            <span data-i18n="nav_settings">Settings</span>
           </button>
           <button id="cleanup-btn" class="nav-btn nav-btn-danger">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-            <span>Clean Disk</span>
+            <span data-i18n="nav_cleanup">Clean Disk</span>
           </button>
         </div>
       </aside>
@@ -55,29 +55,29 @@
         <!-- Home View -->
         <div id="view-home" class="view active">
           <div class="hero">
-            <div class="hero-badge">AI-Powered</div>
-            <h1>Create Viral Clips<br/><span class="hero-accent">in Seconds</span></h1>
-            <p>Paste a YouTube link or upload your video. AI finds the best moments and turns them into shareable clips.</p>
+            <div class="hero-badge" data-i18n="hero_badge">AI-Powered</div>
+            <h1><span data-i18n="hero_title">Create Viral Clips</span><br/><span class="hero-accent" data-i18n="hero_title_accent">in Seconds</span></h1>
+            <p data-i18n="hero_sub">Paste a YouTube link or upload your video. AI finds the best moments and turns them into shareable clips.</p>
           </div>
 
           <div class="source-tabs">
             <button class="source-tab active" data-source="url">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
-              YouTube URL
+              <span data-i18n="tab_youtube">YouTube URL</span>
             </button>
             <button class="source-tab" data-source="file">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Upload MP4
+              <span data-i18n="tab_upload">Upload MP4</span>
             </button>
           </div>
 
           <div class="input-card" id="source-url">
             <div class="search-input-wrapper">
               <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" id="url-input" class="search-input" placeholder="Paste YouTube URL here..." autocomplete="off" spellcheck="false" />
+              <input type="text" id="url-input" class="search-input" placeholder="Paste YouTube URL here..." data-i18n-ph="ph_url" autocomplete="off" spellcheck="false" />
               <button id="process-btn" class="btn-primary">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                Generate Clips
+                <span data-i18n="btn_generate">Generate Clips</span>
               </button>
             </div>
           </div>
@@ -88,20 +88,20 @@
                 <div class="file-drop-icon">
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg>
                 </div>
-                <span class="file-drop-title">Drop your video here</span>
-                <span class="file-drop-hint">or click to browse — MP4, MOV, AVI</span>
+                <span class="file-drop-title" data-i18n="drop_title">Drop your video here</span>
+                <span class="file-drop-hint" data-i18n="drop_hint">or click to browse — MP4, MOV, AVI</span>
                 <input type="file" id="file-input" accept=".mp4,.mov,.avi,video/*" style="display:none;" />
               </label>
               <button id="process-file-btn" class="btn-primary" style="width:100%;justify-content:center;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                Generate Clips
+                <span data-i18n="btn_generate">Generate Clips</span>
               </button>
             </div>
           </div>
 
           <div id="api-key-notice" class="notice" style="display:none;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
-            <span>Add your Google Gemini API key in <strong>Settings</strong> to get started</span>
+            <span data-i18n="notice_apikey">Add your Google Gemini API key in Settings to get started</span>
           </div>
 
           <!-- Processing Status -->
@@ -109,7 +109,7 @@
             <div class="progress-header">
               <div class="spinner"></div>
               <div>
-                <h3 id="progress-title">Processing...</h3>
+                <h3 id="progress-title" data-i18n="progress_title">Processing...</h3>
                 <p id="progress-detail"></p>
               </div>
             </div>
@@ -122,10 +122,10 @@
           <!-- Clips Result -->
           <div id="clips-section" class="clips-section" style="display:none;">
             <div class="clips-header">
-              <h2 id="clips-title">Generated Clips</h2>
+              <h2 id="clips-title" data-i18n="clips_title">Generated Clips</h2>
               <button id="open-folder-btn" class="btn-secondary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
-                Open Folder
+                <span data-i18n="btn_open_folder">Open Folder</span>
               </button>
             </div>
             <div id="clips-grid" class="clips-grid"></div>
@@ -134,42 +134,42 @@
 
         <!-- History View -->
         <div id="view-history" class="view" style="display:none;">
-          <h2>Processing History</h2>
+          <h2 data-i18n="history_title">Processing History</h2>
           <div id="history-list" class="history-list">
             <div class="empty-state">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <p>No processed videos yet</p>
+              <p data-i18n="history_empty">No processed videos yet</p>
             </div>
           </div>
         </div>
 
         <!-- Settings View -->
         <div id="view-settings" class="view" style="display:none;">
-          <h2>Settings</h2>
+          <h2 data-i18n="settings_title">Settings</h2>
           <div class="settings-form">
             <div class="setting-group">
-              <label for="api-key-input">Google Gemini API Key</label>
-              <input type="password" id="api-key-input" class="setting-input" placeholder="Enter new key to change..." autocomplete="off" />
-              <p class="setting-hint">Leave as-is to keep current key. Free tier — <a href="https://aistudio.google.com/apikey" target="_blank">Get your key here</a></p>
+              <label for="api-key-input" data-i18n="set_apikey_label">Google Gemini API Key</label>
+              <input type="password" id="api-key-input" class="setting-input" placeholder="Enter new key to change..." data-i18n-ph="ph_apikey" autocomplete="off" />
+              <p class="setting-hint"><span data-i18n="set_apikey_hint">Leave as-is to keep current key. Free tier</span> — <a href="https://aistudio.google.com/apikey" target="_blank" data-i18n="set_apikey_link">Get your key here</a></p>
             </div>
             <div class="setting-group">
-              <label for="clip-count-input">Number of Clips</label>
+              <label for="clip-count-input" data-i18n="set_clipcount_label">Number of Clips</label>
               <input type="number" id="clip-count-input" class="setting-input" value="6" min="1" max="15" />
-              <p class="setting-hint">How many clips to generate per video (1–15)</p>
+              <p class="setting-hint" data-i18n="set_clipcount_hint">How many clips to generate per video (1–15)</p>
             </div>
             <div class="setting-group">
-              <label for="whisper-model">Whisper Model</label>
+              <label for="whisper-model" data-i18n="set_whisper_label">Whisper Model</label>
               <select id="whisper-model" class="setting-input">
-                <option value="tiny">tiny — Fast, less accurate</option>
-                <option value="base" selected>base — Balanced</option>
-                <option value="small">small — Accurate, slower</option>
+                <option value="tiny" data-i18n="whisper_tiny">tiny — Fast, less accurate</option>
+                <option value="base" selected data-i18n="whisper_base">base — Balanced</option>
+                <option value="small" data-i18n="whisper_small">small — Accurate, slower</option>
               </select>
-              <p class="setting-hint">Model downloads automatically on first use</p>
+              <p class="setting-hint" data-i18n="set_whisper_hint">Model downloads automatically on first use</p>
             </div>
             <div class="setting-group">
-              <label for="subtitle-language">Language</label>
+              <label for="subtitle-language" data-i18n="set_language_label">Language</label>
               <select id="subtitle-language" class="setting-input">
-                <option value="">Auto-detect</option>
+                <option value="" data-i18n="lang_auto">Auto-detect</option>
                 <option value="en">English</option>
                 <option value="tr">Turkish</option>
                 <option value="de">German</option>
@@ -185,11 +185,11 @@
                 <option value="hi">Hindi</option>
                 <option value="nl">Dutch</option>
               </select>
-              <p class="setting-hint">Setting a language skips detection and speeds up processing</p>
+              <p class="setting-hint" data-i18n="set_language_hint">Setting a language skips detection and speeds up processing</p>
             </div>
             <button id="save-settings-btn" class="btn-primary" style="margin-top:8px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-              Save Settings
+              <span data-i18n="btn_save_settings">Save Settings</span>
             </button>
             <div id="settings-msg" class="settings-msg" style="display:none;"></div>
           </div>
@@ -205,8 +205,8 @@
           <div class="editor-brand">
             <span class="editor-logo">✦</span>
             <div>
-              <h2 id="editor-title">Edit Clip</h2>
-              <p class="editor-sub">Refine caption text, colors &amp; style</p>
+              <h2 id="editor-title" data-i18n="editor_title">Edit Clip</h2>
+              <p class="editor-sub" data-i18n="editor_sub">Refine caption text, colors &amp; style</p>
             </div>
           </div>
           <button id="close-editor-btn" class="close-btn">
@@ -218,15 +218,15 @@
           <div class="editor-left">
             <div class="video-frame">
               <video id="editor-video" controls></video>
-              <div id="zoom-focus" class="zoom-focus"><span class="zf-dot"></span><span class="zf-label">ODAK</span></div>
+              <div id="zoom-focus" class="zoom-focus"><span class="zf-dot"></span><span class="zf-label" data-i18n="focus_label">FOCUS</span></div>
               <span class="video-badge">9:16</span>
             </div>
 
               <div class="timeline-wrap">
                 <div class="tl-toolbar">
-                  <button type="button" class="btn-ghost sm" id="tl-del-btn">🗑 Seçili aralığı sil (⌫)</button>
-                  <button type="button" class="btn-ghost sm" id="tl-clear-btn">↺ Kesimleri temizle</button>
-                  <span class="tl-hint-text">Zaman çizgisinde <b>sürükleyerek</b> silinecek aralığı seç (örn. 5s–7s) → <b>⌫</b> ile sil. Silinmiş aralığa tıkla → geri al.</span>
+                  <button type="button" class="btn-ghost sm" id="tl-del-btn" data-i18n="tl_del">🗑 Delete selected range (⌫)</button>
+                  <button type="button" class="btn-ghost sm" id="tl-clear-btn" data-i18n="tl_clear">↺ Clear cuts</button>
+                  <span class="tl-hint-text" data-i18n="tl_hint">Drag on the timeline to select the range to delete (e.g. 5s–7s) → press ⌫ to delete. Click a deleted range to undo.</span>
                 </div>
                 <div class="timeline" id="tl-track">
                   <div class="tl-segs" id="tl-segs"></div>
@@ -239,15 +239,15 @@
 
           <div class="editor-right">
             <div class="field">
-              <label class="field-label">Altyazı cue'ları (zaman &amp; metin)</label>
+              <label class="field-label" data-i18n="editor_cues_label">Subtitle cues (time &amp; text)</label>
               <div id="cue-list" class="cue-list"></div>
-              <button type="button" class="btn-ghost sm" id="add-cue-btn">+ Cue ekle</button>
+              <button type="button" class="btn-ghost sm" id="add-cue-btn" data-i18n="btn_add_cue">+ Add cue</button>
             </div>
 
             <div class="style-panel">
-              <div class="style-panel-head"><span>Style &amp; Effect</span><span class="style-hint">live preview →</span></div>
+              <div class="style-panel-head"><span data-i18n="editor_style_head">Style &amp; Effect</span><span class="style-hint" data-i18n="editor_livepreview">live preview →</span></div>
               <div class="select-row">
-                <label class="sel"><span>Effect</span>
+                <label class="sel"><span data-i18n="lbl_effect">Effect</span>
                   <select id="st-effect">
                     <option value="none">None</option>
                     <option value="zoom-in">Zoom In</option>
@@ -257,55 +257,55 @@
                   </select>
                 </label>
                 <div id="zoom-controls" class="zoom-controls">
-                  <div class="style-row"><label>Zoom gücü</label><input type="range" id="st-strength" min="1.05" max="2.2" step="0.05" value="1.3"><span class="rv" id="rv-strength">1.30</span></div>
-                  <div class="style-row"><label>Anim uzunluğu</label><input type="range" id="st-length" min="0.1" max="1.0" step="0.05" value="1.0"><span class="rv" id="rv-length">1.00</span></div>
-                  <p class="zoom-hint">Önizlemedeki kutuyu videonun istediğin yerine sürükle — zoom o noktaya odaklanır.</p>
+                  <div class="style-row"><label data-i18n="anim_length">Anim uzunluğu</label><input type="range" id="st-length" min="0.1" max="1.0" step="0.05" value="1.0"><span class="rv" id="rv-length">1.00</span></div>
+                  <p class="zoom-hint" data-i18n="zoom_hint">Önizlemedeki kutuyu videonun istediğin yerine sürükle — zoom o noktaya odaklanır.</p>
                 </div>
-                <label class="sel"><span>Font</span>
+                <label class="sel"><span data-i18n="lbl_font">Font</span>
                   <select id="st-fontname"></select>
                 </label>
               </div>
               <div class="style-grid">
-                <div class="style-row"><label>Text</label><input type="color" id="st-primary" value="#ffffff"></div>
-                <div class="style-row"><label>Active</label><input type="color" id="st-secondary" value="#ffff00"></div>
-                <div class="style-row"><label>Outline</label><input type="color" id="st-outline" value="#000000"></div>
-                <div class="style-row"><label>Glow</label><input type="color" id="st-back" value="#ec4899"></div>
-                <div class="style-row"><label>Font size</label><input type="range" id="st-fontsize" min="40" max="140" value="74"><span class="rv" id="rv-fontsize">74</span></div>
-                <div class="style-row"><label>Outline</label><input type="range" id="st-outline_w" min="0" max="12" value="6"><span class="rv" id="rv-outline_w">6</span></div>
-                <div class="style-row"><label>Glow</label><input type="range" id="st-shadow" min="0" max="12" value="4"><span class="rv" id="rv-shadow">4</span></div>
-                <div class="style-row"><label>Bottom</label><input type="range" id="st-marginv" min="20" max="320" value="100"><span class="rv" id="rv-marginv">100</span></div>
+                <div class="style-row"><label data-i18n="lbl_text">Text</label><input type="color" id="st-primary" value="#ffffff"></div>
+                <div class="style-row"><label data-i18n="lbl_active">Active</label><input type="color" id="st-secondary" value="#ffff00"></div>
+                <div class="style-row"><label data-i18n="lbl_outline">Outline</label><input type="color" id="st-outline" value="#000000"></div>
+                <div class="style-row"><label data-i18n="lbl_glow">Glow</label><input type="color" id="st-back" value="#ec4899"></div>
+                <div class="style-row"><label data-i18n="lbl_fontsize">Font size</label><input type="range" id="st-fontsize" min="40" max="140" value="74"><span class="rv" id="rv-fontsize">74</span></div>
+                <div class="style-row"><label data-i18n="lbl_outlinew">Outline</label><input type="range" id="st-outline_w" min="0" max="12" value="6"><span class="rv" id="rv-outline_w">6</span></div>
+                <div class="style-row"><label data-i18n="lbl_shadow">Glow</label><input type="range" id="st-shadow" min="0" max="12" value="4"><span class="rv" id="rv-shadow">4</span></div>
+                <div class="style-row"><label data-i18n="lbl_bottom">Bottom</label><input type="range" id="st-marginv" min="20" max="320" value="100"><span class="rv" id="rv-marginv">100</span></div>
               </div>
               <div class="style-toggles">
-                <label class="chk"><input type="checkbox" id="st-bold" checked> Bold</label>
-                <label class="chk"><input type="checkbox" id="st-gradient"> Gradient text</label>
+                <label class="chk"><input type="checkbox" id="st-bold" checked> <span data-i18n="chk_bold">Bold</span></label>
+                <label class="chk"><input type="checkbox" id="st-gradient"> <span data-i18n="chk_gradient">Gradient text</span></label>
               </div>
               <div class="grad-row" id="grad-row" style="display:none">
-                <div class="style-row"><label>From</label><input type="color" id="st-grad-a" value="#ec4899"></div>
-                <div class="style-row"><label>To</label><input type="color" id="st-grad-b" value="#a855f7"></div>
+                <div class="style-row"><label data-i18n="lbl_grad_from">From</label><input type="color" id="st-grad-a" value="#ec4899"></div>
+                <div class="style-row"><label data-i18n="lbl_grad_to">To</label><input type="color" id="st-grad-b" value="#a855f7"></div>
               </div>
             </div>
 
             <div class="preview-wrap">
-              <div id="editor-preview" class="sub-preview">Your caption preview</div>
+              <div id="editor-preview" class="sub-preview" data-i18n="preview_placeholder">Your caption preview</div>
             </div>
 
             <details class="advanced">
-              <summary>Advanced · edit raw ASS</summary>
+              <summary data-i18n="advanced_summary">Advanced · edit raw ASS</summary>
               <textarea id="editor-ass" spellcheck="false"></textarea>
             </details>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button id="reset-style-btn" class="btn-ghost">Reset style</button>
+          <button id="reset-style-btn" class="btn-ghost" data-i18n="btn_reset_style">Reset style</button>
           <button id="save-clip-btn" class="btn-primary">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Save &amp; Re-render
+            <span data-i18n="btn_save_clip">Save &amp; Re-render</span>
           </button>
         </div>
       </div>
     </div>
 
-    <script src="app.js?v=17"></script>
+    <script src="translations.js"></script>
+    <script src="app.js?v=18"></script>
   </body>
 </html>

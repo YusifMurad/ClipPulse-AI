@@ -1,9 +1,50 @@
-const API = window.location.origin || "http://127.0.0.1:5555";
+const API = (window.electronAPI && window.electronAPI.backendUrl) || window.location.origin || "http://127.0.0.1:5555";
 let currentJobId = null;
 let pollInterval = null;
 let currentJobDir = null;
+let currentLang = "en";
 
-document.addEventListener("DOMContentLoaded", () => {
+function t(key, params) {
+  const dict = (window.I18N && window.I18N[currentLang]) || (window.I18N && window.I18N.en) || {};
+  let s = dict[key] || (window.I18N && window.I18N.en && window.I18N.en[key]) || key;
+  if (params) {
+    for (const k in params) s = s.split("{" + k + "}").join(params[k]);
+  }
+  return s;
+}
+
+function applyEffectOptionLabels() {
+  const map = { none: "eff_none", "zoom-in": "eff_zoomin", "zoom-out": "eff_zoomout", "ken-burns": "eff_kenburns", "pop": "eff_pop" };
+  document.querySelectorAll("#st-effect option").forEach((o) => {
+    const k = map[o.value];
+    if (k) o.textContent = t(k);
+  });
+}
+
+function applyLang(lang) {
+  currentLang = (window.I18N && window.I18N[lang]) ? lang : "en";
+  document.documentElement.lang = currentLang;
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const k = el.getAttribute("data-i18n");
+    if (k) el.textContent = t(k);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
+    const k = el.getAttribute("data-i18n-ph");
+    if (k) el.setAttribute("placeholder", t(k));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const k = el.getAttribute("data-i18n-title");
+    if (k) el.setAttribute("title", t(k));
+  });
+  document.querySelectorAll("[data-i18n-summary]").forEach((el) => {
+    const k = el.getAttribute("data-i18n-summary");
+    if (k) el.textContent = t(k);
+  });
+  applyEffectOptionLabels();
+}
+
+ document.addEventListener("DOMContentLoaded", () => {
+  applyLang("en");
   loadSettings();
   setupNavigation();
   setupProcessButton();
@@ -19,13 +60,13 @@ function setupCleanup() {
   const btn = document.getElementById("cleanup-btn");
   if (btn) {
     btn.addEventListener("click", async () => {
-      if (!confirm("All downloaded videos and generated clips will be deleted. Continue?")) return;
+      if (!confirm(t("cleanup_confirm"))) return;
       try {
         await fetch(API + "/api/cleanup", { method: "POST" });
-        alert("Disk cleaned successfully!");
+        alert(t("cleanup_done"));
         location.reload();
       } catch (e) {
-        alert("Cleanup error: " + e.message);
+        alert(t("cleanup_error") + e.message);
       }
     });
   }
@@ -64,7 +105,10 @@ async function loadSettings() {
     if (data.clip_count) document.getElementById("clip-count-input").value = data.clip_count;
     if (data.whisper_model) document.getElementById("whisper-model").value = data.whisper_model;
     if (data.language) document.getElementById("subtitle-language").value = data.language;
-  } catch {}
+    applyLang(data.language || "en");
+  } catch {
+    applyLang("en");
+  }
 }
 
 function setupSaveSettings() {
@@ -90,9 +134,10 @@ function setupSaveSettings() {
       if (!r.ok) throw new Error("HTTP " + r.status);
       msg.style.display = "block";
       msg.className = "settings-msg success";
-      msg.textContent = "Settings saved!";
+      msg.textContent = t("settings_saved");
       setTimeout(() => (msg.style.display = "none"), 2500);
       checkApiKey();
+      applyLang(language || "en");
       loadSettings();
     } catch (e) {
       msg.style.display = "block";
@@ -100,7 +145,7 @@ function setupSaveSettings() {
       msg.style.background = "rgba(239,68,68,0.12)";
       msg.style.color = "#ef4444";
       msg.style.border = "1px solid rgba(239,68,68,0.2)";
-      msg.textContent = "Error: " + e.message;
+      msg.textContent = t("settings_error") + e.message;
     }
   });
 }
@@ -136,7 +181,7 @@ function setupFileInput() {
   fileInput.addEventListener("change", () => {
     if (fileInput.files && fileInput.files[0]) {
       title.textContent = fileInput.files[0].name;
-      hint.textContent = "Ready to process";
+      hint.textContent = t("ready_process");
     }
   });
 
@@ -160,13 +205,13 @@ function setupFileInput() {
     if (files.length && files[0].type.startsWith("video/")) {
       fileInput.files = files;
       title.textContent = files[0].name;
-      hint.textContent = "Ready to process";
+      hint.textContent = t("ready_process");
     }
   });
 
   document.getElementById("process-file-btn").addEventListener("click", () => {
     if (!fileInput.files || !fileInput.files[0]) {
-      alert("Please select a video file first.");
+      alert(t("alert_select_file"));
       return;
     }
     uploadAndProcess(fileInput.files[0]);
@@ -181,20 +226,20 @@ async function uploadAndProcess(file) {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
     if (!data.has_api_key) {
-      alert("Please add your Google Gemini API key in Settings.");
+      alert(t("alert_add_key"));
       return;
     }
     clipCount = data.clip_count || 6;
     whisperModel = data.whisper_model || "base";
     language = data.language || "";
   } catch {
-    alert("Could not connect to server.");
+    alert(t("alert_connect"));
     return;
   }
 
   const btn = document.getElementById("process-file-btn");
   btn.disabled = true;
-  btn.textContent = "Uploading...";
+  btn.textContent = t("btn_uploading");
 
   // Step 1: upload file to server
   let serverPath;
@@ -210,19 +255,19 @@ async function uploadAndProcess(file) {
     if (upData.error) {
       alert("Upload error: " + upData.error);
       btn.disabled = false;
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
       return;
     }
     serverPath = upData.path;
   } catch (e) {
     alert("Upload error: " + e.message);
     btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
     return;
   }
 
   // Step 2: process uploaded file
-  btn.textContent = "Processing...";
+  btn.textContent = t("btn_processing");
   try {
     const r = await fetch(API + "/api/process", {
       method: "POST",
@@ -233,16 +278,16 @@ async function uploadAndProcess(file) {
     if (data.error) {
       alert("Error: " + data.error);
       btn.disabled = false;
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
       return;
     }
     currentJobId = data.job_id;
     showProgress();
     pollStatus();
   } catch (e) {
-    alert("Connection error: " + e.message);
+    alert(t("alert_connect") + " " + e.message);
     btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
   }
 }
 
@@ -265,19 +310,19 @@ async function startProcessing() {
     const r = await fetch(API + "/api/settings");
     const data = await r.json();
     if (!data.has_api_key) {
-      alert("Please add your Google Gemini API key in Settings.");
+      alert(t("alert_add_key"));
       return;
     }
     clipCount = data.clip_count || 6;
     language = data.language || "";
   } catch {
-    alert("Could not connect to server.");
+    alert(t("alert_connect"));
     return;
   }
 
   const btn = document.getElementById("process-btn");
   btn.disabled = true;
-  btn.textContent = "Starting...";
+  btn.textContent = t("btn_starting");
 
   try {
     const r = await fetch(API + "/api/process", {
@@ -290,9 +335,9 @@ async function startProcessing() {
     showProgress();
     pollStatus();
   } catch (e) {
-    alert("Connection error: " + e.message);
+    alert(t("alert_connect") + " " + e.message);
     btn.disabled = false;
-    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+    btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
   }
 }
 
@@ -301,17 +346,17 @@ function showProgress() {
   document.getElementById("clips-section").style.display = "none";
 }
 
-const STATUS_LABELS = {
-  starting: "Initializing...",
-  downloading: "Downloading video...",
-  downloaded: "Download complete, starting transcription...",
-  transcribing: "Transcribing audio...",
-  transcribed: "Transcription ready, AI analyzing...",
-  analyzing: "AI finding best moments...",
-  moments_found: "Moments found, cutting clips...",
-  cutting_clip: "Cutting clip...",
-  done: "Done!",
-  error: "An error occurred",
+const STATUS_KEYS = {
+  starting: "status_starting",
+  downloading: "status_downloading",
+  downloaded: "status_downloaded",
+  transcribing: "status_transcribing",
+  transcribed: "status_transcribed",
+  analyzing: "status_analyzing",
+  moments_found: "status_moments_found",
+  cutting_clip: "status_cutting_clip",
+  done: "progress_done",
+  error: "progress_error",
 };
 
 function pollStatus() {
@@ -326,11 +371,11 @@ function pollStatus() {
         pollInterval = null;
         document.getElementById("process-btn").disabled = false;
         document.getElementById("process-btn").innerHTML =
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips';
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate");
         const fbtn = document.getElementById("process-file-btn");
-        if (fbtn) { fbtn.disabled = false; fbtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Generate Clips'; }
+        if (fbtn) { fbtn.disabled = false; fbtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("btn_generate"); }
         if (data.status === "done") showClips(data);
-        else alert("Error: " + (data.error || "Unknown error"));
+        else alert(t("progress_error") + " " + (data.error || t("alert_unknown")));
       }
     } catch {}
   }, 1000);
@@ -342,12 +387,12 @@ function updateProgress(data) {
   const bar = document.getElementById("progress-bar");
   const pct = document.getElementById("progress-percent");
 
-  title.textContent = STATUS_LABELS[data.status] || data.status;
+  title.textContent = t(STATUS_KEYS[data.status] || data.status);
   if (data.title) detail.textContent = data.title;
   else if (data.clip_index !== undefined)
-    detail.textContent = `Cutting clip ${data.clip_index + 1}/${data.total}...`;
-  else if (data.segment_count) detail.textContent = `${data.segment_count} segments found`;
-  else if (data.count) detail.textContent = `${data.count} clip moments detected`;
+    detail.textContent = t("progress_cutting", { cur: data.clip_index + 1, total: data.total });
+  else if (data.segment_count) detail.textContent = t("progress_segments", { n: data.segment_count });
+  else if (data.count) detail.textContent = t("progress_moments", { n: data.count });
   else detail.textContent = "";
 
   const progress = data.progress || 0;
@@ -358,7 +403,7 @@ function updateProgress(data) {
 function showClips(data) {
   document.getElementById("progress-section").style.display = "none";
   document.getElementById("clips-section").style.display = "block";
-  document.getElementById("clips-title").textContent = (data.result?.title || "Video") + " — Clips";
+  document.getElementById("clips-title").textContent = (data.result?.title || t("clips_title")) + " — " + t("clips_title");
 
   const result = data.result || data;
   const clips = result.clips || [];
@@ -398,16 +443,16 @@ function showClips(data) {
         <div class="clip-actions">
           <button onclick="playClip(this)">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            Play
+            ${t("card_play")}
           </button>
           <button class="btn-edit" onclick='openEditor(${JSON.stringify(clip).replace(/'/g, "&apos;")})'>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit
+            ${t("card_edit")}
           </button>
           <a href="${downloadUrl}" download style="text-decoration:none;">
             <button>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download
+              ${t("card_download")}
             </button>
           </a>
         </div>
@@ -437,12 +482,12 @@ function playClip(btn) {
   video.muted = false;
   video.loop = false;
   video.play();
-  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> ' + t("card_pause");
   btn.onclick = () => {
     video.pause();
     video.muted = true;
     video.currentTime = 0;
-    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Play';
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> ' + t("card_play");
     btn.onclick = () => playClip(btn);
   };
 }
@@ -499,8 +544,8 @@ const DEFAULT_STYLE = {
 // Timeline state (deleted ranges + current selection, both clip-relative seconds)
 let tl = { dur: 0, cuts: [], sel: null };
 
-// Zoom/pan state (draggable focus + strength + animation length)
-let zoomFx = 0.5, zoomFy = 0.5, zoomStrength = 1.3, zoomLength = 1.0;
+// Zoom/pan state (draggable focus + animation length)
+let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0;
 
 function openEditor(clip) {
   currentEditingClip = clip;
@@ -529,11 +574,8 @@ function openEditor(clip) {
       const f = data.focus || [0.5, 0.5];
       zoomFx = Math.max(0, Math.min(1, +f[0] || 0.5));
       zoomFy = Math.max(0, Math.min(1, +f[1] || 0.5));
-      zoomStrength = +data.strength || 1.3;
       zoomLength = +data.length || 1.0;
-      const stEl = document.getElementById("st-strength");
       const lnEl = document.getElementById("st-length");
-      if (stEl) { stEl.value = zoomStrength; document.getElementById("rv-strength").textContent = zoomStrength.toFixed(2); }
       if (lnEl) { lnEl.value = zoomLength; document.getElementById("rv-length").textContent = zoomLength.toFixed(2); }
       syncZoomUI();
       video.addEventListener("loadedmetadata", () => {
@@ -613,11 +655,6 @@ function setupZoomHandlers() {
   box.addEventListener("pointerup", stop);
   box.addEventListener("pointercancel", stop);
 
-  document.getElementById("st-strength")?.addEventListener("input", (e) => {
-    zoomStrength = +e.target.value;
-    document.getElementById("rv-strength").textContent = zoomStrength.toFixed(2);
-    syncZoomUI();
-  });
   document.getElementById("st-length")?.addEventListener("input", (e) => {
     zoomLength = +e.target.value;
     document.getElementById("rv-length").textContent = zoomLength.toFixed(2);
@@ -638,11 +675,11 @@ function makeCueRow(c, idx) {
   const row = document.createElement("div");
   row.className = "cue-row";
   row.innerHTML = `
-    <input type="number" step="0.1" min="0" class="cue-start" value="${(+c.start).toFixed(2)}" title="Başlangıç (sn)">
+    <input type="number" step="0.1" min="0" class="cue-start" value="${(+c.start).toFixed(2)}" title="${t("cue_start_title")}">
     <span class="cue-dash">–</span>
-    <input type="number" step="0.1" min="0" class="cue-end" value="${(+c.end).toFixed(2)}" title="Bitiş (sn)">
-    <input type="text" class="cue-text" value="${escapeAttr(c.text || "")}" placeholder="Metin…">
-    <button type="button" class="cue-del" title="Sil">✕</button>
+    <input type="number" step="0.1" min="0" class="cue-end" value="${(+c.end).toFixed(2)}" title="${t("cue_end_title")}">
+    <input type="text" class="cue-text" value="${escapeAttr(c.text || "")}" placeholder="${t("preview_placeholder")}">
+    <button type="button" class="cue-del" title="${t("cue_del_title")}">✕</button>
   `;
   row.querySelector(".cue-del").addEventListener("click", () => {
     row.remove();
@@ -699,7 +736,7 @@ function updateTimelineUI() {
     d.className = "tl-cut";
     d.style.left = tlPos(c[0]);
     d.style.width = `calc(${tlPos(c[1])} - ${tlPos(c[0])})`;
-    d.title = "Silinmiş aralık — tıkla geri al";
+    d.title = t("tl_cut_title");
     d.dataset.cut = i;
     layer.appendChild(d);
   });
@@ -715,7 +752,7 @@ function updateTimelineUI() {
   if (v && v.duration) document.getElementById("tl-play").style.left = tlPos(v.currentTime);
   const totalCut = tl.cuts.reduce((s, c) => s + (c[1] - c[0]), 0);
   document.getElementById("tl-times").textContent =
-    `Süre: ${fmtT(tl.dur)}   ·   Silinen aralık: ${tl.cuts.length} (${fmtT(totalCut)})`;
+    t("tl_times", { dur: fmtT(tl.dur), n: tl.cuts.length, cut: fmtT(totalCut) });
 }
 
 // Add the current selection to the deleted ranges list
@@ -943,8 +980,8 @@ function setupEditor() {
       dur: tl.dur,
       effect: effect,
       focus: [+zoomFx.toFixed(4), +zoomFy.toFixed(4)],
-      strength: zoomStrength,
       length: zoomLength,
+      strength: 1.3,
       cues: cues,
       style: style
     };
@@ -968,7 +1005,7 @@ function setupEditor() {
           }
         });
       } else {
-        alert("Error: " + data.error);
+      alert(t("progress_error") + " " + data.error);
       }
     } catch (e) {
       alert("Save error: " + e.message);

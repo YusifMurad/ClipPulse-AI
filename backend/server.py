@@ -461,6 +461,11 @@ def app_js():
     return send_file(str(FRONTEND_DIR / "app.js"))
 
 
+@app.route("/translations.js")
+def translations():
+    return send_file(str(FRONTEND_DIR / "translations.js"))
+
+
 @app.route("/api/cleanup", methods=["POST"])
 def manual_cleanup():
     cleanup()

@@ -34,6 +34,23 @@ jobs:
           cd backend
           python3 -c "import server, pipeline; print('imports OK')"
 
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Cross-platform syntax check
+        run: |
+          python -m py_compile backend/server.py backend/pipeline.py backend/api_seller.py
+          python -c "import ast,glob; [ast.parse(open(f, encoding='utf-8').read()) for f in glob.glob('backend/*.py')]; print('syntax OK')"
+      - name: Verify Windows launcher scripts exist
+        shell: pwsh
+        run: |
+          if (-not (Test-Path start.bat)) { throw 'start.bat missing' }
+          if (-not (Test-Path start.ps1)) { throw 'start.ps1 missing' }
+
   docker-build:
     runs-on: ubuntu-latest
     steps:

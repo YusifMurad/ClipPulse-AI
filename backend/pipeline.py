@@ -1,7 +1,9 @@
 import os
 import re
+import sys
 import json
 import time
+import shutil
 import subprocess
 import tempfile
 import traceback
@@ -15,25 +17,45 @@ BASE_DIR = Path(__file__).parent.parent
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_DIR.mkdir(exist_ok=True)
 
+# ffmpeg / ffprobe binaries (override with FFMPEG_PATH / FFPROBE_PATH if not on PATH)
+FFMPEG = os.environ.get("FFMPEG_PATH") or "ffmpeg"
+FFPROBE = os.environ.get("FFPROBE_PATH") or "ffprobe"
+
+
+def _find_deno():
+    """Locate the deno binary (optional, used by yt-dlp for YouTube)."""
+    env = os.environ.get("DENO_BIN")
+    if env and os.path.exists(env):
+        return env
+    return shutil.which("deno")
+
 
 def download_video(url, job_dir):
     """Download video from YouTube using yt-dlp CLI with retries."""
-    yt_dlp_bin = str(Path(__file__).parent / "venv" / "bin" / "yt-dlp")
-    output_template = str(job_dir / "source.%(ext)s")
+    yt_dl = [sys.executable, "-m", "yt_dlp"]
+    deno = _find_deno()
 
-    # Different strategies to try in order
+    # Strategies that work without a JS runtime
     strategies = [
-        ["--js-runtimes", "deno:/home/yusif/.deno/bin/deno", "--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
-        ["--js-runtimes", "deno:/home/yusif/.deno/bin/deno", "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
         ["--impersonate", "chrome", "-f", "bestvideo+bestaudio/best"],
         ["-f", "bestvideo+bestaudio/best"],
+        ["-f", "best[height<=720][ext=mp4]/best"],
     ]
+    # If deno is available, prepend strategies that use it (better YouTube support)
+    if deno:
+        deno_rt = f"deno:{deno}"
+        strategies = [
+            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
+            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
+        ] + strategies
+
+    output_template = str(job_dir / "source.%(ext)s")
 
     last_err = None
     for strat in strategies:
         for attempt in range(2):
             cmd = [
-                yt_dlp_bin,
+                *yt_dl,
                 *strat,
                 "--merge-output-format", "mp4",
                 "--no-warnings",
@@ -46,10 +68,12 @@ def download_video(url, job_dir):
                 "--print", "title",
                 url,
             ]
-            proc = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=600,
-                env={**os.environ, "PATH": f"/home/yusif/.deno/bin:/usr/local/bin:/usr/bin:/bin:{os.environ.get('PATH', '')}"}
-            )
+            try:
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+            except Exception as e:
+                last_err = str(e)
+                time.sleep(3)
+                continue
             if proc.returncode == 0:
                 lines = proc.stdout.strip().split("\n")
                 filename = lines[-2].strip() if len(lines) >= 2 else None
@@ -501,7 +525,7 @@ def fmt_srt_time(seconds):
 def _probe_fps(video_path):
     try:
         out = subprocess.run(
-            ["ffprobe", "-v", "error", "-select_streams", "v:0",
+            [FFPROBE, "-v", "error", "-select_streams", "v:0",
              "-show_entries", "stream=r_frame_rate", "-of", "default=nw=1:nk=1", video_path],
             capture_output=True, text=True,
         )
@@ -604,7 +628,7 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     # Generate thumbnail (at 2s into the clip)
     thumb_path = output_path.with_suffix(".jpg")
     thumb_cmd = [
-        "ffmpeg", "-y",
+        FFMPEG, "-y",
         "-ss", str(start + min(duration, 2)),
         "-i", video_path,
         "-vframes", "1",
@@ -647,7 +671,7 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     vf = ",".join(vf_parts)
 
     cmd = [
-        "ffmpeg", "-y",
+        FFMPEG, "-y",
         "-ss", str(start),
         "-i", video_path,
         "-t", str(duration),
@@ -709,7 +733,7 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
         for idx, (s, e) in enumerate(segs):
             p = tmpdir / f"part{idx}.mp4"
             subprocess.run(
-                ["ffmpeg", "-y", "-ss", str(s), "-i", video_path, "-t", str(e - s),
+                [FFMPEG, "-y", "-ss", str(s), "-i", video_path, "-t", str(e - s),
                  "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
                  "-c:a", "aac", "-b:a", "128k", str(p)],
                 capture_output=True, check=True,
@@ -721,7 +745,7 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
         concat_path = tmpdir / "concat.mp4"
         # Re-encode (not copy) so timestamps/duration are clean after splicing
         subprocess.run(
-            ["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(listfile),
+            [FFMPEG, "-y", "-f", "concat", "-safe", "0", "-i", str(listfile),
              "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
              "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(concat_path)],
             capture_output=True, check=True,

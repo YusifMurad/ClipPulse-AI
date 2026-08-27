@@ -22,6 +22,10 @@
 </p>
 
 <p align="center">
+  🪟 <strong>Windows users:</strong> full setup guide → <a href="README.windows.md">README.windows.md</a>
+</p>
+
+<p align="center">
   <img src="https://github.com/user-attachments/assets/5ae92a0d-b851-48d2-a31d-a771aaf24488" alt="ClipPulse AI Screenshot" width="900">
 </p>
 
@@ -48,12 +52,24 @@ No subscriptions. No watermarks. No "free trial that clips 30 seconds." Yours to
 
 ## 🚀 Quick Start — 30 seconds
 
+**Linux / macOS:**
+
 ```bash
 git clone https://github.com/YusifMurad/ClipPulse-AI.git
 cd ClipPulse-AI
 chmod +x start.sh
 ./start.sh
 ```
+
+**Windows (PowerShell):**
+
+```powershell
+git clone https://github.com/YusifMurad/ClipPulse-AI.git
+cd ClipPulse-AI
+.\start.ps1
+```
+
+> 🪟 Prefer Command Prompt? Use `start.bat`. Full Windows walkthrough → **[README.windows.md](README.windows.md)**.
 
 Now open **http://localhost:5555**, paste a YouTube URL (or drop in an MP4), and hit **Create Clips**.
 
@@ -156,6 +172,20 @@ git clone https://github.com/YusifMurad/ClipPulse-AI.git
 cd ClipPulse-AI
 docker compose up -d --build         # → http://localhost:5555
 ```
+
+### Windows (manual)
+
+ClipPulse AI is fully cross-platform. The fastest path is to run the bundled
+PowerShell script, which creates the virtualenv and installs everything for you:
+
+```powershell
+git clone https://github.com/YusifMurad/ClipPulse-AI.git
+cd ClipPulse-AI
+.\start.ps1
+```
+
+A step-by-step walkthrough (Python install, FFmpeg, optional Deno, troubleshooting)
+is in **[README.windows.md](README.windows.md)**.
 
 ---
 
