@@ -4,9 +4,18 @@ let pollInterval = null;
 let currentJobDir = null;
 let currentLang = "en";
 
+function tr(key) {
+  if (!window.I18N) return null;
+  const d = window.I18N[currentLang];
+  if (d && Object.prototype.hasOwnProperty.call(d, key)) return d[key];
+  const e = window.I18N.en;
+  if (e && Object.prototype.hasOwnProperty.call(e, key)) return e[key];
+  return null;
+}
+
 function t(key, params) {
-  const dict = (window.I18N && window.I18N[currentLang]) || (window.I18N && window.I18N.en) || {};
-  let s = dict[key] || (window.I18N && window.I18N.en && window.I18N.en[key]) || key;
+  let s = tr(key);
+  if (s == null) s = key;
   if (params) {
     for (const k in params) s = s.split("{" + k + "}").join(params[k]);
   }
@@ -26,19 +35,27 @@ function applyLang(lang) {
   document.documentElement.lang = currentLang;
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const k = el.getAttribute("data-i18n");
-    if (k) el.textContent = t(k);
+    if (!k) return;
+    const v = tr(k);
+    if (v != null) el.textContent = v;
   });
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
     const k = el.getAttribute("data-i18n-ph");
-    if (k) el.setAttribute("placeholder", t(k));
+    if (!k) return;
+    const v = tr(k);
+    if (v != null) el.setAttribute("placeholder", v);
   });
   document.querySelectorAll("[data-i18n-title]").forEach((el) => {
     const k = el.getAttribute("data-i18n-title");
-    if (k) el.setAttribute("title", t(k));
+    if (!k) return;
+    const v = tr(k);
+    if (v != null) el.setAttribute("title", v);
   });
   document.querySelectorAll("[data-i18n-summary]").forEach((el) => {
     const k = el.getAttribute("data-i18n-summary");
-    if (k) el.textContent = t(k);
+    if (!k) return;
+    const v = tr(k);
+    if (v != null) el.textContent = v;
   });
   applyEffectOptionLabels();
 }
