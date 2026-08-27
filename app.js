@@ -558,8 +558,8 @@ const DEFAULT_STYLE = {
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
 
-// Timeline state (deleted ranges + current selection, both clip-relative seconds)
-let tl = { dur: 0, cuts: [], sel: null };
+// Timeline state (deleted ranges + current selection + split points; clip-relative seconds)
+let tl = { dur: 0, cuts: [], sel: null, splits: [] };
 
 // Zoom/pan state (draggable focus + animation length)
 let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0;
@@ -733,6 +733,7 @@ function collectCues() {
 function initTimeline(dur) {
   tl.dur = dur || 0;
   tl.cuts = [];
+  tl.splits = [];
   tl.sel = null;
   updateTimelineUI();
 }
@@ -766,6 +767,19 @@ function updateTimelineUI() {
     d.dataset.cut = i;
     layer.appendChild(d);
   });
+  // Split point markers (clickable to remove)
+  const slayer = document.getElementById("tl-splits");
+  if (slayer) {
+    slayer.innerHTML = "";
+    tl.splits.forEach((s, i) => {
+      const d = document.createElement("div");
+      d.className = "tl-split";
+      d.style.left = tlPos(s);
+      d.dataset.split = i;
+      d.title = t("tl_split_remove") || "Split point — click to remove";
+      slayer.appendChild(d);
+    });
+  }
   // Current selection being chosen (translucent red)
   if (tl.sel && tl.sel[1] - tl.sel[0] > 0.02) {
     const d = document.createElement("div");
@@ -795,6 +809,25 @@ function tlClearCuts() {
   updateTimelineUI();
 }
 
+// Add a split point (in clip-relative seconds) — CapCut-style cut marker
+function tlSplitAt(t) {
+  if (!isFinite(t) || t <= 0.02 || t >= tl.dur - 0.02) return;
+  if (tl.splits.some((s) => Math.abs(s - t) < 0.05)) return;
+  tl.splits.push(+t.toFixed(3));
+  tl.splits.sort((a, b) => a - b);
+  updateTimelineUI();
+}
+
+// Whole segment [start,end] containing time t (between split points)
+function segRangeAt(t) {
+  if (!tl.splits.length) return [t, t];
+  const pts = [0, ...tl.splits, tl.dur];
+  for (let i = 0; i < pts.length - 1; i++) {
+    if (t >= pts[i] && t <= pts[i + 1]) return [pts[i], pts[i + 1]];
+  }
+  return [t, t];
+}
+
 function setupTimelineHandlers() {
   const track = document.getElementById("tl-track");
   let dragging = false;
@@ -811,6 +844,13 @@ function setupTimelineHandlers() {
     if (e.target.classList.contains("tl-cut")) {
       const i = +e.target.dataset.cut;
       tl.cuts.splice(i, 1);
+      updateTimelineUI();
+      return;
+    }
+    // Click a split marker -> remove it
+    if (e.target.classList.contains("tl-split")) {
+      const i = +e.target.dataset.split;
+      tl.splits.splice(i, 1);
       updateTimelineUI();
       return;
     }
@@ -835,10 +875,15 @@ function setupTimelineHandlers() {
     dragging = false;
     try { track.releasePointerCapture(e.pointerId); } catch (_) {}
     if (!moved) {
-      // Plain click without drag -> seek the playhead
-      const v = document.getElementById("editor-video");
-      if (v && v.duration) v.currentTime = tl.sel[0];
-      tl.sel = null;
+      if (tl.splits.length) {
+        // With split points, a plain click selects the whole segment for deletion
+        tl.sel = segRangeAt(tl.sel[0]);
+      } else {
+        // Plain click without drag -> seek the playhead
+        const v = document.getElementById("editor-video");
+        if (v && v.duration) v.currentTime = tl.sel[0];
+        tl.sel = null;
+      }
     }
     updateTimelineUI();
   }
@@ -852,11 +897,22 @@ function setupTimelineHandlers() {
 
   document.getElementById("tl-del-btn")?.addEventListener("click", tlDeleteSelection);
   document.getElementById("tl-clear-btn")?.addEventListener("click", tlClearCuts);
+  document.getElementById("tl-split-btn")?.addEventListener("click", () => {
+    const v = document.getElementById("editor-video");
+    tlSplitAt(v ? v.currentTime : 0);
+  });
 
   // Backspace/Delete commits the current selection as a deleted range
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("editor-modal");
     if (!modal || modal.style.display !== "flex") return;
+    // Ctrl/Cmd+B splits at the current playhead position
+    if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
+      e.preventDefault();
+      const v = document.getElementById("editor-video");
+      tlSplitAt(v ? v.currentTime : 0);
+      return;
+    }
     if (e.key === "Backspace" || e.key === "Delete") {
       if (tl.sel && tl.sel[1] - tl.sel[0] >= 0.05) {
         e.preventDefault();

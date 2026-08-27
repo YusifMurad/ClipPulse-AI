@@ -67,24 +67,30 @@ def _cuda_available():
         return False
 
 
-def _ffmpeg_encode(input_args, vf, output_path, threads=None):
+def _ffmpeg_encode(input_args, vf, output_path, threads=None, audio_args=None, audio_filter=None):
     """Encode a clip with the auto-selected encoder; fall back to CPU on failure."""
     threads = max(1, threads or _cpu_count())
-    audio = ["-c:a", "aac", "-b:a", "128k"]
+    if audio_args is None:
+        audio_args = ["-c:a", "aac", "-b:a", "192k", "-ar", "48000"]
     out_tmp = str(output_path) + ".tmp.mp4"
     base = [FFMPEG, "-y"] + list(input_args)
     if vf:
         base += ["-vf", vf]
-    base += _video_codec_args(threads) + audio + ["-movflags", "+faststart", out_tmp]
+    base += _video_codec_args(threads) + audio_args
+    if audio_filter:
+        base += ["-af", audio_filter]
+    base += ["-movflags", "+faststart", out_tmp]
     try:
         subprocess.run(base, capture_output=True, check=True)
     except subprocess.CalledProcessError:
         if _detect_encoder_type() != "cpu":
             cpu_args = ["-c:v", "libx264", "-preset", "veryfast",
                         "-threads", str(_cpu_count()), "-crf", "23"]
-            subprocess.run([FFMPEG, "-y"] + list(input_args) + (["-vf", vf] if vf else [])
-                           + cpu_args + audio + ["-movflags", "+faststart", out_tmp],
-                           capture_output=True, check=True)
+            fallback = [FFMPEG, "-y"] + list(input_args) + (["-vf", vf] if vf else []) + cpu_args + audio_args
+            if audio_filter:
+                fallback += ["-af", audio_filter]
+            fallback += ["-movflags", "+faststart", out_tmp]
+            subprocess.run(fallback, capture_output=True, check=True)
         else:
             raise
     os.replace(out_tmp, str(output_path))
@@ -723,7 +729,7 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
             f.write(ass_content)
         # Force styles: WrapStyle=1 (smart wrapping), MarginV (bottom position)
         sub_filter = f"ass={sub_path.replace('\\', '/')}"
-    else:
+    elif srt_content and srt_content.strip():
         # Fallback to plain SRT
         sub_path = str(output_path) + ".srt"
         with open(sub_path, "w", encoding="utf-8") as f:
@@ -735,6 +741,8 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
             f"OutlineColour=&H00000000,Outline=2,Shadow=1,"
             f"Alignment=2,MarginV=80'"
         )
+    else:
+        sub_filter = ""
 
     # Optional video zoom effect (keeps frame count 1:1 to preserve audio sync)
     zoom = ""
@@ -749,8 +757,13 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     vf_parts.append(sub_filter)
     vf = ",".join(vf_parts)
 
+    # Gentle edge fades remove start/end clicks/pops caused by hard cuts
+    audio_filter = None
+    if duration > 0.3:
+        fade_out_st = max(0.0, duration - 0.1)
+        audio_filter = f"afade=t=in:d=0.05,afade=t=out:st={fade_out_st:.3f}:d=0.1"
     input_args = ["-ss", str(start), "-i", video_path, "-t", str(duration)]
-    _ffmpeg_encode(input_args, vf, output_path, threads=threads)
+    _ffmpeg_encode(input_args, vf, output_path, threads=threads, audio_filter=audio_filter)
 
 
 def srt_path_escape(p):
