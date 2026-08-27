@@ -11,7 +11,6 @@
 [![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/pkgs/container/clippulse-ai)
 [![Discussions](https://img.shields.io/badge/Discussions-active-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 [![Twitter](https://img.shields.io/badge/Twitter-@yusifkishidir-1DA1F2?logo=twitter&style=for-the-badge)](https://twitter.com/yusifkishidir)
-[![Sponsors](https://img.shields.io/badge/Sponsors-GitHub_Sponsors-ff69b4?logo=githubsponsors&style=for-the-badge)](https://github.com/sponsors/YusifMurad)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=for-the-badge)](CONTRIBUTING.md)
 [![Last Commit](https://img.shields.io/github/last-commit/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/commits/main)
 
@@ -208,21 +207,6 @@ We love contributions — from a typo fix to a new AI model backend.
 - 💡 Questions & ideas → **[GitHub Discussions](https://github.com/YusifMurad/ClipPulse-AI/discussions)**
 - 🐦 Updates → **[@yusifkishidir](https://twitter.com/yusifkishidir)**
 - 🐞 Bugs → **[Issues](https://github.com/YusifMurad/ClipPulse-AI/issues)**
-
----
-
-## ❤️ Sponsors
-
-ClipPulse AI is free because people like you back it.
-Become a sponsor → **[GitHub Sponsors](https://github.com/sponsors/YusifMurad)**
-
-<!-- SPONSORS_START -->
-| Tier | Price | Perk |
-|------|-------|------|
-| ☕ Supporter | $3/mo | Name in README + warm fuzzies |
-| 🚀 Pro | $10/mo | Priority support + early features |
-| 💎 Sponsor | $50/mo | Logo here + on the docs site |
-<!-- SPONSORS_END -->
 
 ---
 
