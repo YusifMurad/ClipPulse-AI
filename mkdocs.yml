@@ -41,7 +41,6 @@ plugins:
           name: Español
         - locale: ar
           name: العربية
-          rtl: true
         - locale: zh
           name: 中文
 

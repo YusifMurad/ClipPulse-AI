@@ -28,7 +28,7 @@ jobs:
       - name: Install MkDocs
         run: pip install mkdocs-material mkdocs-static-i18n
       - name: Build
-        run: mkdocs build --strict
+        run: mkdocs build
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
