@@ -1426,6 +1426,41 @@ h2 {
   border-color: rgba(255,255,255,0.85);
 }
 
+/* Committed deleted range (click to undo) */
+.tl-cut {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  background: repeating-linear-gradient(45deg, rgba(239,68,68,0.92), rgba(239,68,68,0.92) 7px, rgba(239,68,68,0.5) 7px, rgba(239,68,68,0.5) 14px);
+  border: 1px solid rgba(255,255,255,0.85);
+  cursor: pointer;
+}
+
+.tl-cut::after {
+  content: "✕";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+
+/* Active selection being dragged */
+.tl-sel {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  background: rgba(239,68,68,0.35);
+  border: 2px solid #ef4444;
+  box-shadow: 0 0 8px rgba(239,68,68,0.6);
+  pointer-events: none;
+}
+
 .tl-splits {
   position: absolute;
   inset: 0;

@@ -496,8 +496,8 @@ const DEFAULT_STYLE = {
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
 
-// Timeline state (CapCut-style: split points + deleted segments)
-let tl = { dur: 0, splits: [], deleted: [], selected: -1 };
+// Timeline state (deleted ranges + current selection, both clip-relative seconds)
+let tl = { dur: 0, cuts: [], sel: null };
 
 // Zoom/pan state (draggable focus + strength + animation length)
 let zoomFx = 0.5, zoomFy = 0.5, zoomStrength = 1.3, zoomLength = 1.0;
@@ -508,8 +508,8 @@ function openEditor(clip) {
   const video = document.getElementById("editor-video");
   const title = document.getElementById("editor-title");
 
-  // Reset timeline state so no stale splits/deletions carry over
-  tl = { dur: 0, splits: [], deleted: [], selected: -1 };
+  // Reset timeline state so no stale deletions carry over
+  tl = { dur: 0, cuts: [], sel: null };
 
   title.textContent = clip.hook;
 
@@ -667,24 +667,20 @@ function collectCues() {
   return cues;
 }
 
-function tlSegs() {
-  const pts = [0, ...tl.splits, tl.dur];
-  const segs = [];
-  for (let i = 0; i < pts.length - 1; i++) segs.push([pts[i], pts[i + 1]]);
-  return segs;
-}
-
 function initTimeline(dur) {
   tl.dur = dur || 0;
-  tl.splits = [];
-  tl.deleted = [];
-  tl.selected = -1;
+  tl.cuts = [];
+  tl.sel = null;
   updateTimelineUI();
 }
 
 function tlPos(t) {
   if (!tl.dur) return "0%";
   return ((t / tl.dur) * 100).toFixed(2) + "%";
+}
+
+function tlClamp(t) {
+  return Math.max(0, Math.min(tl.dur, t));
 }
 
 function fmtT(s) {
@@ -695,92 +691,113 @@ function fmtT(s) {
 }
 
 function updateTimelineUI() {
-  const segsLayer = document.getElementById("tl-segs");
-  const splitsLayer = document.getElementById("tl-splits");
-  segsLayer.innerHTML = "";
-  splitsLayer.innerHTML = "";
-  const segs = tlSegs();
-  segs.forEach((seg, i) => {
+  const layer = document.getElementById("tl-segs");
+  layer.innerHTML = "";
+  // Already-deleted ranges (red hatched); click to undo
+  tl.cuts.forEach((c, i) => {
     const d = document.createElement("div");
-    d.className = "tl-seg" + (tl.deleted.includes(i) ? " del" : "") + (tl.selected === i ? " sel" : "");
-    d.style.left = tlPos(seg[0]);
-    d.style.width = `calc(${tlPos(seg[1])} - ${tlPos(seg[0])})`;
-    d.addEventListener("click", (e) => {
-      e.stopPropagation();
-      tl.selected = i;
-      const v = document.getElementById("editor-video");
-      if (v && v.duration) v.currentTime = (seg[0] + seg[1]) / 2;
-      updateTimelineUI();
-    });
-    segsLayer.appendChild(d);
+    d.className = "tl-cut";
+    d.style.left = tlPos(c[0]);
+    d.style.width = `calc(${tlPos(c[1])} - ${tlPos(c[0])})`;
+    d.title = "Silinmiş aralık — tıkla geri al";
+    d.dataset.cut = i;
+    layer.appendChild(d);
   });
-  tl.splits.forEach(s => {
+  // Current selection being chosen (translucent red)
+  if (tl.sel && tl.sel[1] - tl.sel[0] > 0.02) {
     const d = document.createElement("div");
-    d.className = "tl-split";
-    d.style.left = tlPos(s);
-    splitsLayer.appendChild(d);
-  });
+    d.className = "tl-sel";
+    d.style.left = tlPos(tl.sel[0]);
+    d.style.width = `calc(${tlPos(tl.sel[1])} - ${tlPos(tl.sel[0])})`;
+    layer.appendChild(d);
+  }
   const v = document.getElementById("editor-video");
   if (v && v.duration) document.getElementById("tl-play").style.left = tlPos(v.currentTime);
+  const totalCut = tl.cuts.reduce((s, c) => s + (c[1] - c[0]), 0);
   document.getElementById("tl-times").textContent =
-    `Süre: ${fmtT(tl.dur)}  ·  Parça: ${segs.length}  ·  Silinen: ${tl.deleted.length}`;
+    `Süre: ${fmtT(tl.dur)}   ·   Silinen aralık: ${tl.cuts.length} (${fmtT(totalCut)})`;
 }
 
-function tlSplitAt(t) {
-  t = Math.max(0.05, Math.min(tl.dur - 0.05, t));
-  if (t <= 0.05 || t >= tl.dur - 0.05) return;
-  if (tl.splits.some(s => Math.abs(s - t) < 0.05)) return;
-  tl.splits.push(t);
-  tl.splits.sort((a, b) => a - b);
+// Add the current selection to the deleted ranges list
+function tlDeleteSelection() {
+  if (!tl.sel || tl.sel[1] - tl.sel[0] < 0.05) return;
+  tl.cuts.push([+tl.sel[0].toFixed(3), +tl.sel[1].toFixed(3)]);
+  tl.sel = null;
   updateTimelineUI();
 }
 
-function tlToggleDelete() {
-  if (tl.selected < 0) return;
-  const i = tl.selected;
-  if (tl.deleted.includes(i)) tl.deleted = tl.deleted.filter(x => x !== i);
-  else tl.deleted.push(i);
+function tlClearCuts() {
+  tl.cuts = [];
+  tl.sel = null;
   updateTimelineUI();
 }
 
 function setupTimelineHandlers() {
   const track = document.getElementById("tl-track");
+  let dragging = false;
+  let moved = false;
 
-  // Click empty track area to seek the playhead
-  track.addEventListener("pointerdown", (e) => {
-    if (e.target.classList.contains("tl-seg") || e.target.classList.contains("tl-split")) return;
+  function tFromEvent(e) {
     const r = track.getBoundingClientRect();
-    const x = e.clientX - r.left;
-    const v = document.getElementById("editor-video");
-    if (v && v.duration) {
-      v.currentTime = Math.min(tl.dur, Math.max(0, (x / r.width) * tl.dur));
+    const x = (e.clientX - r.left) / r.width;
+    return tlClamp(x * tl.dur);
+  }
+
+  track.addEventListener("pointerdown", (e) => {
+    // Click an already-deleted range -> undo it
+    if (e.target.classList.contains("tl-cut")) {
+      const i = +e.target.dataset.cut;
+      tl.cuts.splice(i, 1);
       updateTimelineUI();
+      return;
     }
+    dragging = true;
+    moved = false;
+    const t = tFromEvent(e);
+    tl.sel = [t, t];
+    try { track.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
   });
+
+  track.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const t = tFromEvent(e);
+    if (Math.abs(t - tl.sel[0]) > 0.03) moved = true;
+    tl.sel = [Math.min(tl.sel[0], t), Math.max(tl.sel[0], t)];
+    updateTimelineUI();
+  });
+
+  function endDrag(e) {
+    if (!dragging) return;
+    dragging = false;
+    try { track.releasePointerCapture(e.pointerId); } catch (_) {}
+    if (!moved) {
+      // Plain click without drag -> seek the playhead
+      const v = document.getElementById("editor-video");
+      if (v && v.duration) v.currentTime = tl.sel[0];
+      tl.sel = null;
+    }
+    updateTimelineUI();
+  }
+  track.addEventListener("pointerup", endDrag);
+  track.addEventListener("pointercancel", endDrag);
 
   document.getElementById("editor-video")?.addEventListener("timeupdate", () => {
     document.getElementById("tl-play").style.left =
       tlPos(document.getElementById("editor-video").currentTime);
   });
 
-  document.getElementById("tl-split-btn")?.addEventListener("click", () => {
-    const v = document.getElementById("editor-video");
-    tlSplitAt(v ? v.currentTime : 0);
-  });
-  document.getElementById("tl-del-btn")?.addEventListener("click", tlToggleDelete);
+  document.getElementById("tl-del-btn")?.addEventListener("click", tlDeleteSelection);
+  document.getElementById("tl-clear-btn")?.addEventListener("click", tlClearCuts);
 
-  // Keyboard: Ctrl/Cmd+B split at playhead · Backspace/Delete toggles delete
+  // Backspace/Delete commits the current selection as a deleted range
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("editor-modal");
     if (!modal || modal.style.display !== "flex") return;
-    if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B")) {
-      e.preventDefault();
-      const v = document.getElementById("editor-video");
-      tlSplitAt(v ? v.currentTime : 0);
-    } else if (e.key === "Backspace" || e.key === "Delete") {
-      if (tl.selected >= 0) {
+    if (e.key === "Backspace" || e.key === "Delete") {
+      if (tl.sel && tl.sel[1] - tl.sel[0] >= 0.05) {
         e.preventDefault();
-        tlToggleDelete();
+        tlDeleteSelection();
       }
     }
   });
@@ -914,12 +931,11 @@ function setupEditor() {
     const cues = collectCues();
     const effect = document.getElementById("st-effect")?.value || "none";
 
-    // Build cut list from deleted segments (clip-relative seconds)
-    const segs = tlSegs();
-    const cuts = [];
-    tl.deleted.forEach(i => {
-      if (segs[i]) cuts.push([+segs[i][0].toFixed(3), +segs[i][1].toFixed(3)]);
-    });
+    // Build cut list from deleted ranges + current selection (clip-relative s)
+    const cuts = tl.cuts.map(c => [+c[0].toFixed(3), +c[1].toFixed(3)]);
+    if (tl.sel && tl.sel[1] - tl.sel[0] >= 0.05) {
+      cuts.push([+tl.sel[0].toFixed(3), +tl.sel[1].toFixed(3)]);
+    }
 
     const payload = {
       start: 0,

@@ -222,19 +222,19 @@
               <span class="video-badge">9:16</span>
             </div>
 
-            <div class="timeline-wrap">
-              <div class="tl-toolbar">
-                <button type="button" class="btn-ghost sm" id="tl-split-btn">✂ Böl (Ctrl+B)</button>
-                <button type="button" class="btn-ghost sm" id="tl-del-btn">🗑 Sil (⌫)</button>
-                <span class="tl-hint-text">Playhead'i konumlandır → <b>Ctrl+B</b> ile böl → segmenti seç → <b>⌫</b> ile sil</span>
+              <div class="timeline-wrap">
+                <div class="tl-toolbar">
+                  <button type="button" class="btn-ghost sm" id="tl-del-btn">🗑 Seçili aralığı sil (⌫)</button>
+                  <button type="button" class="btn-ghost sm" id="tl-clear-btn">↺ Kesimleri temizle</button>
+                  <span class="tl-hint-text">Zaman çizgisinde <b>sürükleyerek</b> silinecek aralığı seç (örn. 5s–7s) → <b>⌫</b> ile sil. Silinmiş aralığa tıkla → geri al.</span>
+                </div>
+                <div class="timeline" id="tl-track">
+                  <div class="tl-segs" id="tl-segs"></div>
+                  <div class="tl-splits" id="tl-splits"></div>
+                  <div class="tl-play" id="tl-play"></div>
+                </div>
+                <div class="tl-times" id="tl-times"></div>
               </div>
-              <div class="timeline" id="tl-track">
-                <div class="tl-segs" id="tl-segs"></div>
-                <div class="tl-splits" id="tl-splits"></div>
-                <div class="tl-play" id="tl-play"></div>
-              </div>
-              <div class="tl-times" id="tl-times"></div>
-            </div>
           </div>
 
           <div class="editor-right">
@@ -306,6 +306,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=16"></script>
+    <script src="app.js?v=17"></script>
   </body>
 </html>
