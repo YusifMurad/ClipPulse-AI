@@ -117,6 +117,13 @@ def download_video(url, job_dir):
             ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
         ] + strategies
 
+    # Use aria2c for max download throughput when available (falls back to the
+    # built-in downloader automatically if aria2c is missing or fails).
+    if shutil.which("aria2c"):
+        aria = ["--external-downloader", "aria2c",
+                "--external-downloader-args", "-x 16 -s 16 -k 1M"]
+        strategies = [s + aria for s in strategies] + strategies
+
     output_template = str(job_dir / "source.%(ext)s")
 
     last_err = None
@@ -128,7 +135,7 @@ def download_video(url, job_dir):
                 "--merge-output-format", "mp4",
                 "--no-warnings",
                 "--no-check-certificates",
-                "--concurrent-fragments", "4",
+                "--concurrent-fragments", "16",
                 "--socket-timeout", "30",
                 "--retries", "2",
                 "-o", output_template,

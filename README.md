@@ -139,7 +139,7 @@ YouTube / MP4
 - 🖼️ **Auto Thumbnails** — cover image generated per clip
 - 🧹 **Auto Cleanup** — disk space reclaimed automatically
 - 🔒 **Private by design** — API key stored server-side, never sent to the client
-- ⚡ **Auto Acceleration** — uses NVIDIA NVENC when available, else tuned `libx264` (`veryfast` + threaded); `faster-whisper` runs GPU/CUDA or multi-threaded CPU; clips cut in parallel across all cores
+- ⚡ **Auto Acceleration** — uses NVIDIA NVENC when available, else tuned `libx264` (`veryfast` + threaded); `faster-whisper` runs GPU/CUDA or multi-threaded CPU; clips cut in parallel across all cores; downloads accelerated via `aria2c` (auto-detected) or multi-fragment `yt-dlp`
 
 ---
 
