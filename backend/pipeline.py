@@ -104,23 +104,31 @@ def _find_deno():
     return shutil.which("deno")
 
 
-def download_video(url, job_dir):
-    """Download video from YouTube using yt-dlp CLI with retries."""
+def download_video(url, job_dir, progress_cb=None):
+    """Download video from YouTube using yt-dlp CLI with retries.
+
+    Resolution is capped at 1080p so downloads stay fast (selecting
+    `bestvideo+bestaudio/best` can pull a multi-GB 4K file that looks "stuck").
+    If `progress_cb(percent)` is given, download progress is streamed live.
+    """
     yt_dl = [sys.executable, "-m", "yt_dlp"]
     deno = _find_deno()
+    base_fmt = "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
 
     # Strategies that work without a JS runtime
     strategies = [
-        ["--impersonate", "chrome", "-f", "bestvideo+bestaudio/best"],
-        ["-f", "bestvideo+bestaudio/best"],
-        ["-f", "best[height<=720][ext=mp4]/best"],
+        ["--impersonate", "chrome", "-f", base_fmt],
+        ["-f", base_fmt],
+        ["-f", "best[height<=1080][ext=mp4]/best[height<=1080]"],
     ]
     # If deno is available, prepend strategies that use it (better YouTube support)
     if deno:
         deno_rt = f"deno:{deno}"
         strategies = [
-            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--remote-components", "ejs:github", "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best"],
-            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web", "-f", "bestvideo[height<=720]+bestaudio/best"],
+            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--remote-components", "ejs:github",
+             "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]"],
+            ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web",
+             "-f", base_fmt],
         ] + strategies
 
     # Use aria2c for max download throughput when available (falls back to the
@@ -131,7 +139,7 @@ def download_video(url, job_dir):
         strategies = [s + aria for s in strategies] + strategies
 
     output_template = str(job_dir / "source.%(ext)s")
-
+    pct_re = re.compile(r"\[download\]\s*([\d.]+)%")
     last_err = None
     for strat in strategies:
         for attempt in range(2):
@@ -141,6 +149,8 @@ def download_video(url, job_dir):
                 "--merge-output-format", "mp4",
                 "--no-warnings",
                 "--no-check-certificates",
+                "--newline",
+                "--progress",
                 "--concurrent-fragments", "16",
                 "--socket-timeout", "30",
                 "--retries", "2",
@@ -150,26 +160,51 @@ def download_video(url, job_dir):
                 url,
             ]
             try:
-                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+                proc = subprocess.Popen(
+                    cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    text=True, bufsize=1,
+                )
             except Exception as e:
                 last_err = str(e)
                 time.sleep(3)
                 continue
-            if proc.returncode == 0:
-                lines = proc.stdout.strip().split("\n")
-                filename = lines[-2].strip() if len(lines) >= 2 else None
-                title = lines[-1].strip() if len(lines) >= 2 else "video"
-                if not filename or not os.path.exists(filename):
-                    candidates = list(job_dir.glob("source.*"))
-                    if candidates:
-                        filename = str(candidates[0])
-                    else:
-                        last_err = "Downloaded file not found"
-                        continue
-                return filename, title
-            else:
-                last_err = proc.stderr.strip()
-            time.sleep(3)
+            # Stream stderr to report live download progress
+            last_line = ""
+            while True:
+                line = proc.stderr.readline()
+                if not line:
+                    break
+                last_line = line
+                m = pct_re.search(line)
+                if m and progress_cb:
+                    try:
+                        progress_cb(min(99.0, float(m.group(1))))
+                    except (ValueError, TypeError):
+                        pass
+            try:
+                proc.wait(timeout=600)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                last_err = "Download timed out"
+                time.sleep(3)
+                continue
+            if proc.returncode != 0:
+                last_err = last_line.strip()
+                time.sleep(3)
+                continue
+            out = (proc.stdout.read() or "").strip()
+            lines = [l for l in out.split("\n") if l.strip()]
+            filename = lines[-2].strip() if len(lines) >= 2 else None
+            title = lines[-1].strip() if len(lines) >= 2 else "video"
+            if not filename or not os.path.exists(filename):
+                candidates = list(job_dir.glob("source.*"))
+                if candidates:
+                    filename = str(candidates[0])
+                else:
+                    last_err = "Downloaded file not found"
+                    time.sleep(3)
+                    continue
+            return filename, title
 
     raise RuntimeError(f"yt-dlp failed: {last_err}")
 
@@ -858,7 +893,10 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
             emit("downloaded", title=title, progress=15)
         else:
             emit("downloading", progress=0)
-            video_path, title = download_video(url, job_dir)
+            video_path, title = download_video(
+                url, job_dir,
+                progress_cb=lambda p: emit("downloading", progress=p),
+            )
             emit("downloaded", title=title, progress=15)
 
         emit("transcribing", progress=20)
