@@ -108,20 +108,21 @@ def _find_deno():
 def download_video(url, job_dir, progress_cb=None, status_cb=None):
     """Download video from YouTube using yt-dlp CLI with retries.
 
-    Resolution is capped at 720p so downloads + the post-download merge stay
-    fast (a 1080p/4K file can look "stuck" for minutes). If `progress_cb(percent)`
-    is given, download progress is streamed live; `status_cb(stage, **kw)` reports
-    stage changes (e.g. "merging") so the UI never looks frozen.
+    Resolution is capped at 1080p so downloads stay reasonably fast (selecting
+    `bestvideo+bestaudio/best` can pull a multi-GB 4K file that looks "stuck").
+    If `progress_cb(percent)` is given, download progress is streamed live;
+    `status_cb(stage, **kw)` reports stage changes (e.g. "merging") so the UI
+    never looks frozen.
     """
     yt_dl = [sys.executable, "-m", "yt_dlp"]
     deno = _find_deno()
-    base_fmt = "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
+    base_fmt = "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
 
     # Strategies that work without a JS runtime. Prefer a single-file (progressive)
-    # mp4 to skip the ffmpeg merge entirely; fall back to 720p DASH + merge.
+    # mp4 to skip the ffmpeg merge entirely; fall back to 1080p DASH + merge.
     strategies = [
-        ["--impersonate", "chrome", "-f", "best[height<=720][ext=mp4]/best[height<=720]"],
-        ["-f", "best[height<=720][ext=mp4]/best[height<=720]"],
+        ["--impersonate", "chrome", "-f", "best[height<=1080][ext=mp4]/best[height<=1080]"],
+        ["-f", "best[height<=1080][ext=mp4]/best[height<=1080]"],
         ["--impersonate", "chrome", "-f", base_fmt],
         ["-f", base_fmt],
     ]
@@ -130,7 +131,7 @@ def download_video(url, job_dir, progress_cb=None, status_cb=None):
         deno_rt = f"deno:{deno}"
         strategies = [
             ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--remote-components", "ejs:github",
-             "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best[height<=720]"],
+             "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]"],
             ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web",
              "-f", base_fmt],
         ] + strategies
