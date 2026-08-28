@@ -130,7 +130,9 @@ window.I18N = {
     "feat3_desc": "Cut, split and delete on a timeline; retype captions; restyle colors — then re-render in one click.",
     "diff_badge": "Private by design",
     "diff_title": "Your videos never leave your machine",
-    "diff_desc": "ClipPulse runs entirely in your browser and local server. Your Gemini key stays with you, files are processed locally, and there's no monthly lock-in."
+    "diff_desc": "ClipPulse runs entirely in your browser and local server. Your Gemini key stays with you, files are processed locally, and there's no monthly lock-in.",
+    "set_aspect_label": "Aspect ratio",
+    "set_aspect_hint": "9:16 for Reels/Shorts/TikTok, 16:9 for YouTube, 1:1 for feed posts."
   },
   "tr": {
    "nav_home": "Ev.",
@@ -263,7 +265,9 @@ window.I18N = {
     "feat3_desc": "Zaman çizelgesinde kes, böl ve sil; altyazıyı yeniden yaz; renkleri değiştir — tek tıkla yeniden oluştur.",
     "diff_badge": "Tasarımdan gizlilik",
     "diff_title": "Videolarınız makinenizden hiç çıkmaz",
-    "diff_desc": "ClipPulse tamamen tarayıcınızda ve yerel sunucuda çalışır. Gemini anahtarınız sizde kalır, dosyalar yerelde işlenir ve aylık kilitlenme yoktur."
+    "diff_desc": "ClipPulse tamamen tarayıcınızda ve yerel sunucuda çalışır. Gemini anahtarınız sizde kalır, dosyalar yerelde işlenir ve aylık kilitlenme yoktur.",
+    "set_aspect_label": "En-boy oranı",
+    "set_aspect_hint": "9:16 Reels/Shorts/TikTok, 16:9 YouTube, 1:1 gönderiler için."
   },
   "de": {
    "nav_home": "Homepage",
@@ -396,7 +400,9 @@ window.I18N = {
     "feat3_desc": "Schneiden, teilen und löschen auf der Timeline; Untertitel neu tippen; Farben ändern — dann in einem Klick neu rendern.",
     "diff_badge": "Privat von Haus aus",
     "diff_title": "Deine Videos verlassen deinen Rechner nie",
-    "diff_desc": "ClipPulse läuft komplett in deinem Browser und lokalem Server. Dein Gemini-Key bleibt bei dir, Dateien werden lokal verarbeitet, kein monatliches Lock-in."
+    "diff_desc": "ClipPulse läuft komplett in deinem Browser und lokalem Server. Dein Gemini-Key bleibt bei dir, Dateien werden lokal verarbeitet, kein monatliches Lock-in.",
+    "set_aspect_label": "Bildformat",
+    "set_aspect_hint": "9:16 für Reels/Shorts/TikTok, 16:9 für YouTube, 1:1 für Feed-Posts."
   },
   "fr": {
    "nav_home": "Page d'accueil",
@@ -529,7 +535,9 @@ window.I18N = {
     "feat3_desc": "Coupez, divisez et supprimez sur la timeline ; retapez les sous-titres ; restylez les couleurs — puis re-rendu en un clic.",
     "diff_badge": "Privé par conception",
     "diff_title": "Vos vidéos ne quittent jamais votre machine",
-    "diff_desc": "ClipPulse fonctionne entièrement dans votre navigateur et serveur local. Votre clé Gemini reste avec vous, les fichiers sont traités localement, sans engagement mensuel."
+    "diff_desc": "ClipPulse fonctionne entièrement dans votre navigateur et serveur local. Votre clé Gemini reste avec vous, les fichiers sont traités localement, sans engagement mensuel.",
+    "set_aspect_label": "Ratio d'aspect",
+    "set_aspect_hint": "9:16 pour Reels/Shorts/TikTok, 16:9 pour YouTube, 1:1 pour les posts."
   },
   "es": {
    "nav_home": "Inicio",
@@ -662,7 +670,9 @@ window.I18N = {
     "feat3_desc": "Corta, divide y borra en la línea de tiempo; reescribe subtítulos; cambia colores — y re-renderiza con un clic.",
     "diff_badge": "Privado por diseño",
     "diff_title": "Tus vídeos nunca salen de tu equipo",
-    "diff_desc": "ClipPulse se ejecuta en tu navegador y servidor local. Tu clave Gemini se queda contigo, los archivos se procesan localmente y sin permanencia mensual."
+    "diff_desc": "ClipPulse se ejecuta en tu navegador y servidor local. Tu clave Gemini se queda contigo, los archivos se procesan localmente y sin permanencia mensual.",
+    "set_aspect_label": "Relación de aspecto",
+    "set_aspect_hint": "9:16 para Reels/Shorts/TikTok, 16:9 para YouTube, 1:1 para feed."
   },
   "it": {
    "nav_home": "Homepage",
@@ -795,7 +805,9 @@ window.I18N = {
     "feat3_desc": "Taglia, dividi ed elimina sulla timeline; riscrivi i sottotitoli; cambia colori — poi ri-render con un clic.",
     "diff_badge": "Privato per natura",
     "diff_title": "I tuoi video non lasciano mai il tuo computer",
-    "diff_desc": "ClipPulse gira interamente nel tuo browser e server locale. La tua chiave Gemini resta con te, i file sono elaborati localmente e non c'è alcun vincolo mensuale."
+    "diff_desc": "ClipPulse gira interamente nel tuo browser e server locale. La tua chiave Gemini resta con te, i file sono elaborati localmente e non c'è alcun vincolo mensuale.",
+    "set_aspect_label": "Rapporto d'aspetto",
+    "set_aspect_hint": "9:16 per Reels/Shorts/TikTok, 16:9 per YouTube, 1:1 per i post."
   },
   "pt": {
    "nav_home": "Casa",
@@ -928,7 +940,9 @@ window.I18N = {
     "feat3_desc": "Corte, divida e exclua na linha do tempo; reescreva legendas; mude cores — e re-renderize em um clique.",
     "diff_badge": "Privado por design",
     "diff_title": "Seus vídeos nunca saem da sua máquina",
-    "diff_desc": "O ClipPulse roda inteiramente no seu navegador e servidor local. Sua chave Gemini fica com você, os arquivos são processados localmente e sem fidelidade mensal."
+    "diff_desc": "O ClipPulse roda inteiramente no seu navegador e servidor local. Sua chave Gemini fica com você, os arquivos são processados localmente e sem fidelidade mensal.",
+    "set_aspect_label": "Proporção",
+    "set_aspect_hint": "9:16 para Reels/Shorts/TikTok, 16:9 para YouTube, 1:1 para feed."
   },
   "ru": {
    "nav_home": "\u0414\u043e\u043c\u043e\u0439",
@@ -1061,7 +1075,9 @@ window.I18N = {
     "feat3_desc": "Вырезайте, делите и удаляйте на таймлайне; перепечатывайте субтитры; меняйте цвета — и пересборка в один клик.",
     "diff_badge": "Приватно по замыслу",
     "diff_title": "Ваши видео никогда не покидают ваш ПК",
-    "diff_desc": "ClipPulse работает полностью в вашем браузере и локальном сервере. Ваш Gemini-ключ остаётся у вас, файлы обрабатываются локально, без ежемесячной привязки."
+    "diff_desc": "ClipPulse работает полностью в вашем браузере и локальном сервере. Ваш Gemini-ключ остаётся у вас, файлы обрабатываются локально, без ежемесячной привязки.",
+    "set_aspect_label": "Соотношение сторон",
+    "set_aspect_hint": "9:16 для Reels/Shorts/TikTok, 16:9 для YouTube, 1:1 для постов."
   },
   "ar": {
    "nav_home": "\u0627\u0644\u0645\u0646\u0632\u0644",
@@ -1194,7 +1210,9 @@ window.I18N = {
     "feat3_desc": "قصّ وقتّقسم واحذف على الخط الزمني؛ أعد كتابة التعليقات؛ غيّر الألوان — ثم أعد التصيير بنقرة واحدة.",
     "diff_badge": "خصوصية بالتصميم",
     "diff_title": "فيديوهاتك لا تغادر جهازك أبدًا",
-    "diff_desc": "يعمل ClipPulse بالكامل في متصفحك وخادمك المحلي. مفتاح Gemini يبقى معك، والملفات تُعالج محليًا، دون ارتباط شهري."
+    "diff_desc": "يعمل ClipPulse بالكامل في متصفحك وخادمك المحلي. مفتاح Gemini يبقى معك، والملفات تُعالج محليًا، دون ارتباط شهري.",
+    "set_aspect_label": "نسبة الأبعاد",
+    "set_aspect_hint": "9:16 لـ Reels/Shorts/TikTok، 16:9 لـ YouTube، 1:1 للمنشورات."
   },
   "ja": {
    "nav_home": "\u30db\u30fc\u30e0",
@@ -1327,7 +1345,9 @@ window.I18N = {
     "feat3_desc": "タイムラインで切り取り・分割・削除。字幕の書き直し、色の変更 — ワンクリックで再レンダー。",
     "diff_badge": "設計からプライベート",
     "diff_title": "あなたの動画が端末を出ることはありません",
-    "diff_desc": "ClipPulseはブラウザとローカルサーバーだけで動きます。Geminiキーはあなたの手元にあり、ファイルはローカルで処理され、月額縛りはありません。"
+    "diff_desc": "ClipPulseはブラウザとローカルサーバーだけで動きます。Geminiキーはあなたの手元にあり、ファイルはローカルで処理され、月額縛りはありません。",
+    "set_aspect_label": "アスペクト比",
+    "set_aspect_hint": "9:16はReels/Shorts/TikTok、16:9はYouTube、1:1はフィード投稿向け。"
   },
   "ko": {
    "nav_home": "\ud648",
@@ -1460,7 +1480,9 @@ window.I18N = {
     "feat3_desc": "타임라인에서 자르기·분할·삭제, 자막 다시 입력, 색상 변경 — 한 번의 클릭으로 다시 렌더링.",
     "diff_badge": "설계부터 프라이빗",
     "diff_title": "내 영상은 내 장치를 떠나지 않습니다",
-    "diff_desc": "ClipPulse는 브라우저와 로컬 서버에서만 돌아갑니다. Gemini 키는 당신이 가지며, 파일은 로컬에서 처리되고 월 구독 묶임이 없습니다."
+    "diff_desc": "ClipPulse는 브라우저와 로컬 서버에서만 돌아갑니다. Gemini 키는 당신이 가지며, 파일은 로컬에서 처리되고 월 구독 묶임이 없습니다.",
+    "set_aspect_label": "화면 비율",
+    "set_aspect_hint": "9:16은 Reels/Shorts/TikTok, 16:9은 YouTube, 1:1은 피드 게시물용."
   },
   "zh": {
    "nav_home": "\u9996\u9875",
@@ -1593,7 +1615,9 @@ window.I18N = {
     "feat3_desc": "在时间线上剪切、拆分、删除；重打字幕；改颜色 — 一键重新渲染。",
     "diff_badge": "天生注重隐私",
     "diff_title": "你的视频永远不会离开你的设备",
-    "diff_desc": "ClipPulse 完全在你的浏览器和本地服务器运行。你的 Gemini 密钥由你保管，文件本地处理，没有月度绑定。"
+    "diff_desc": "ClipPulse 完全在你的浏览器和本地服务器运行。你的 Gemini 密钥由你保管，文件本地处理，没有月度绑定。",
+    "set_aspect_label": "画幅比例",
+    "set_aspect_hint": "9:16 用于 Reels/Shorts/TikTok，16:9 用于 YouTube，1:1 用于信息流。"
   },
   "hi": {
    "nav_home": "\u092e\u0941\u0916 \u092a\u0943\u0937\u094d\u0920",
@@ -1726,7 +1750,9 @@ window.I18N = {
     "feat3_desc": "टाइमलाइन पर काटें, विभाजित करें और हटाएँ; कैप्शन फिर लिखें; रंग बदलें — फिर एक क्लिक में री-रेंडर।",
     "diff_badge": "डिज़ाइन से प्राइवेट",
     "diff_title": "आपके वीडियो आपके डिवाइस को कभी नहीं छोड़ते",
-    "diff_desc": "ClipPulse पूरी तरह आपके ब्राउज़र और लोकल सर्वर पर चलता है। आपकी Gemini कुंजी आपके पास रहती है, फ़ाइलें लोकल प्रोसेस होती हैं और कोई मासिक लॉक-इन नहीं।"
+    "diff_desc": "ClipPulse पूरी तरह आपके ब्राउज़र और लोकल सर्वर पर चलता है। आपकी Gemini कुंजी आपके पास रहती है, फ़ाइलें लोकल प्रोसेस होती हैं और कोई मासिक लॉक-इन नहीं।",
+    "set_aspect_label": "आस्पेक्ट रेशियो",
+    "set_aspect_hint": "9:16 Reels/Shorts/TikTok के लिए, 16:9 YouTube के लिए, 1:1 फ़ीड पोस्ट के लिए।"
   },
   "nl": {
    "nav_home": "Homepage",
@@ -1859,6 +1885,8 @@ window.I18N = {
     "feat3_desc": "Knip, splits en verwijder op een tijdlijn; typ onderschriften over; verander kleuren — en re-render met één klik.",
     "diff_badge": "Privé van ontwerp",
     "diff_title": "Je video's verlaten je apparaat nooit",
-    "diff_desc": "ClipPulse draait volledig in je browser en lokale server. Je Gemini-sleutel blijft bij je, bestanden worden lokaal verwerkt en er is geen maandelijkse lock-in."
+    "diff_desc": "ClipPulse draait volledig in je browser en lokale server. Je Gemini-sleutel blijft bij je, bestanden worden lokaal verwerkt en er is geen maandelijkse lock-in.",
+    "set_aspect_label": "Beeldverhouding",
+    "set_aspect_hint": "9:16 voor Reels/Shorts/TikTok, 16:9 voor YouTube, 1:1 voor feed-posts."
   }
 };

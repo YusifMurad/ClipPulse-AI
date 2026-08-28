@@ -228,6 +228,15 @@
               </select>
               <p class="setting-hint" data-i18n="set_language_hint">Setting a language skips detection and speeds up processing</p>
             </div>
+            <div class="setting-group">
+              <label for="aspect-select" data-i18n="set_aspect_label">Aspect ratio</label>
+              <select id="aspect-select" class="setting-input">
+                <option value="9:16">9:16 — Vertical (Reels / Shorts / TikTok)</option>
+                <option value="16:9">16:9 — Landscape (YouTube)</option>
+                <option value="1:1">1:1 — Square (Feed)</option>
+              </select>
+              <p class="setting-hint" data-i18n="set_aspect_hint">9:16 for Reels/Shorts/TikTok, 16:9 for YouTube, 1:1 for feed posts.</p>
+            </div>
             <button id="save-settings-btn" class="btn-primary" style="margin-top:8px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
               <span data-i18n="btn_save_settings">Save Settings</span>
@@ -362,7 +371,7 @@
       </div>
     </div>
 
-    <script src="translations.js?v=8"></script>
-    <script src="app.js?v=25"></script>
+    <script src="translations.js?v=9"></script>
+    <script src="app.js?v=26"></script>
   </body>
 </html>

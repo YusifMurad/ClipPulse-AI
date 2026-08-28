@@ -116,6 +116,15 @@ def load_api_key():
     return ""
 
 
+def load_settings():
+    """Load full server-side settings (api key, aspect, clip_count, ...)."""
+    settings_path = CONFIG_DIR / "settings.json"
+    if settings_path.exists():
+        with open(settings_path) as f:
+            return json.load(f)
+    return {}
+
+
 @app.route("/api/upload", methods=["POST"])
 @rate_limit
 def upload_file():
@@ -139,13 +148,14 @@ def upload_file():
     return jsonify({"path": str(dest), "name": original})
 
 
-def run_job(job_id, url, api_key, clip_count, local_file=None, whisper_model="base", language=None):
+def run_job(job_id, url, api_key, clip_count, local_file=None, whisper_model="base", language=None, aspect="9:16"):
     def callback(job_id, status, **kwargs):
         jobs[job_id]["status"] = status
         jobs[job_id].update(kwargs)
 
     result = process_video(url, api_key, clip_count, callback=callback, job_id=job_id,
-                           local_file=local_file, whisper_model=whisper_model, language=language)
+                           local_file=local_file, whisper_model=whisper_model, language=language,
+                           aspect=aspect)
     jobs[job_id]["result"] = result
     jobs[job_id]["status"] = result.get("status", "done")
     persist_job(job_id)
@@ -160,6 +170,7 @@ def start_process():
     local_file = data.get("local_file", "").strip()
     whisper_model = data.get("whisper_model", "base")
     language = data.get("language", "").strip() or None
+    aspect = data.get("aspect") or load_settings().get("aspect", "9:16")
 
     # API key comes from server config only — never from client
     api_key = load_api_key()
@@ -171,7 +182,7 @@ def start_process():
     job_id = str(uuid.uuid4())[:8]
     jobs[job_id] = {"status": "starting", "progress": 0}
 
-    thread = threading.Thread(target=run_job, args=(job_id, url, api_key, clip_count, local_file, whisper_model, language))
+    thread = threading.Thread(target=run_job, args=(job_id, url, api_key, clip_count, local_file, whisper_model, language, aspect))
     thread.daemon = True
     thread.start()
 
@@ -368,7 +379,7 @@ def update_clip(job_id, filename):
     if cues is not None and style is not None:
         try:
             from pipeline import build_ass_from_cues
-            ass_content = build_ass_from_cues(cues, style)
+            ass_content = build_ass_from_cues(cues, style, aspect=aspect)
         except Exception as e:
             return jsonify({"error": "Subtitle build failed: " + str(e)}), 500
     else:
@@ -384,11 +395,12 @@ def update_clip(job_id, filename):
     focus = data.get("focus") or [0.5, 0.5]
     strength = float(data.get("strength", 1.3) or 1.3)
     length_frac = float(data.get("length", 1.0) or 1.0)
+    aspect = data.get("aspect", "9:16")
 
     try:
         recut_clip(str(clip_path), job_dir, filename, start, end, ass_content,
                    effect=effect, cuts=cuts, focus=focus, strength=strength,
-                   length_frac=length_frac)
+                   length_frac=length_frac, aspect=aspect)
         # Persist the user's last edit (cues + zoom params) in a sidecar so
         # re-editing is clean (clip-relative). After a cut the clip changes, so
         # fall back to ASS parsing and editor defaults.
@@ -409,6 +421,7 @@ def update_clip(job_id, filename):
         for c in jobs.get(job_id, {}).get("result", {}).get("clips", []):
             if c.get("filename") == filename:
                 c["effect"] = effect
+                c["aspect"] = aspect
                 break
         persist_job(job_id)
         return jsonify({"ok": True, "message": "Clip updated"})

@@ -436,17 +436,18 @@ def fmt_ass_time(seconds):
     return f"{h}:{m:02d}:{s:02d}.{cs:02d}"
 
 
-def create_ass(segments, start_offset, end_offset):
+def create_ass(segments, start_offset, end_offset, aspect="9:16"):
     """Create animated ASS subtitles with word-by-word highlight (OpusClip-style).
 
     Each word is rendered in white; the currently spoken word animates to
     yellow/green via a \\t transform over its own duration, giving a
     karaoke-style pop effect.
     """
-    header = """[Script Info]
+    pr = _aspect_res(aspect)
+    header = f"""[Script Info]
 ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
+PlayResX: {pr[0]}
+PlayResY: {pr[1]}
 WrapStyle: 2
 ScaledBorderAndShadow: yes
 
@@ -520,7 +521,15 @@ def lerp_color(c1, c2, t):
     return "#" + "".join(f"{int(a[i] + (b[i] - a[i]) * t):02X}" for i in range(3))
 
 
-def build_ass_header(style):
+def _aspect_res(aspect):
+    if aspect == "16:9":
+        return (1920, 1080)
+    if aspect == "1:1":
+        return (1080, 1080)
+    return (1080, 1920)
+
+
+def build_ass_header(style, playres=(1080, 1920)):
     primary = hex_to_ass(style.get("primary", "#ffffff"))
     secondary = hex_to_ass(style.get("secondary", "#ffff00"))
     outline = hex_to_ass(style.get("outline", "#000000"))
@@ -537,8 +546,8 @@ def build_ass_header(style):
     )
     return f"""[Script Info]
 ScriptType: v4.00+
-PlayResX: 1080
-PlayResY: 1920
+PlayResX: {playres[0]}
+PlayResY: {playres[1]}
 WrapStyle: 2
 ScaledBorderAndShadow: yes
 
@@ -552,9 +561,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
 
-def build_ass_with_style(words, start_offset, end_offset, new_text, style):
+def build_ass_with_style(words, start_offset, end_offset, new_text, style, aspect="9:16"):
     """Build animated ASS from new caption text + style, mapped onto word timings."""
-    header = build_ass_header(style)
+    header = build_ass_header(style, playres=_aspect_res(aspect))
     nw = (new_text or "").split()
     if not nw:
         return header
@@ -591,7 +600,7 @@ def build_ass_with_style(words, start_offset, end_offset, new_text, style):
     return header + "\n".join(events)
 
 
-def rebuild_clip_ass(job_dir, start, end, new_text, style):
+def rebuild_clip_ass(job_dir, start, end, new_text, style, aspect="9:16"):
     """Regenerate a clip's ASS from stored transcript words + new text/style."""
     seg_path = job_dir / "segments.json"
     if not seg_path.exists():
@@ -613,7 +622,7 @@ def rebuild_clip_ass(job_dir, start, end, new_text, style):
             if seg["end"] < start or seg["start"] > end:
                 continue
             window_words.append({"word": seg["text"], "start": max(start, seg["start"]), "end": min(end, seg["end"])})
-    return build_ass_with_style(window_words, start, end, new_text, style)
+    return build_ass_with_style(window_words, start, end, new_text, style, aspect=aspect)
 
 
 def extract_cues(segments, start, end):
@@ -653,13 +662,13 @@ def extract_cues(segments, start, end):
     return cues
 
 
-def build_ass_from_cues(cues, style):
+def build_ass_from_cues(cues, style, aspect="9:16"):
     """Build animated ASS strictly from the user's cue list (start/end/text).
 
     Each cue is split into words that animate idle -> active across the cue's
     own time window, so the timing the user sets is honoured exactly.
     """
-    header = build_ass_header(style)
+    header = build_ass_header(style, playres=_aspect_res(aspect))
     grad = style.get("gradient", False)
     grad_a = style.get("gradient_a", "#ec4899")
     grad_b = style.get("gradient_b", "#a855f7")
@@ -804,9 +813,10 @@ def retime_ass(ass_text, cuts_relative):
 
 
 def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None, effect="none",
-             focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None, threads=None):
-    """Cut clip, crop to 9:16, burn (animated) subtitles, and create thumbnail."""
+              focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None, threads=None, aspect="9:16"):
+    """Cut clip, crop to target aspect, burn (animated) subtitles, and create thumbnail."""
     duration = end - start
+    TW, TH = _aspect_res(aspect)
 
     # Generate thumbnail (at 2s into the clip)
     thumb_path = output_path.with_suffix(".jpg")
@@ -846,10 +856,10 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
     zoom = ""
     if effect not in (None, "none", ""):
         fps = fps or _probe_fps(video_path)
-        zoom = build_zoom_filter(effect, 1080, 1920, duration, fps,
+        zoom = build_zoom_filter(effect, TW, TH, duration, fps,
                                  focus=focus, strength=strength, length_frac=length_frac)
-    crop_part = "crop=1080:1920"
-    vf1 = f"scale=1080:1920:force_original_aspect_ratio=increase,{crop_part}"
+    crop_part = f"crop={TW}:{TH}"
+    vf1 = f"scale={TW}:{TH}:force_original_aspect_ratio=increase,{crop_part}"
     if zoom:
         vf1 += "," + zoom
 
@@ -881,7 +891,7 @@ def srt_path_escape(p):
 
 
 def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effect="none", cuts=None,
-               focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None):
+               focus=(0.5, 0.5), strength=1.3, length_frac=1.0, fps=None, aspect="9:16"):
     """Re-cut an existing clip with new timings, optional cut-out regions and subtitles."""
     import shutil
     clip_output = job_dir / clip_name
@@ -940,13 +950,13 @@ def recut_clip(video_path, job_dir, clip_name, start, end, new_ass_content, effe
         kept_duration = (end - start) - sum(b - a for a, b in rel_cuts)
         cut_clip(str(concat_path), 0, kept_duration, None, clip_output,
                  ass_content=new_ass_content, effect=effect, focus=focus,
-                 strength=strength, length_frac=length_frac, fps=fps)
+                 strength=strength, length_frac=length_frac, fps=fps, aspect=aspect)
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
     return True
 
 
-def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_file=None, whisper_model="base", language=None):
+def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_file=None, whisper_model="base", language=None, aspect="9:16"):
     """Full pipeline: download → transcribe → find moments → cut clips."""
     job_dir = OUTPUT_DIR / job_id
     job_dir.mkdir(parents=True, exist_ok=True)
@@ -1008,7 +1018,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
             ass = create_ass(segments, moment["start"], moment["end"])
             clip_effect = "zoom-in" if moment.get("zoom_in") else "none"
             cut_clip(video_path, moment["start"], moment["end"], srt, clip_output,
-                     ass_content=ass, effect=clip_effect, threads=per_threads)
+                     ass_content=ass, effect=clip_effect, threads=per_threads, aspect=aspect)
             return {
                 "filename": clip_name,
                 "hook": moment.get("hook_title", ""),
@@ -1020,6 +1030,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
                 "end": moment["end"],
                 "effect": clip_effect,
                 "zoom_in": moment.get("zoom_in", {}),
+                "aspect": aspect,
             }
 
         import concurrent.futures as _cf

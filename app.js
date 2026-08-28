@@ -122,6 +122,7 @@ async function loadSettings() {
     if (data.clip_count) document.getElementById("clip-count-input").value = data.clip_count;
     if (data.whisper_model) document.getElementById("whisper-model").value = data.whisper_model;
     if (data.language) document.getElementById("subtitle-language").value = data.language;
+    if (data.aspect) document.getElementById("aspect-select").value = data.aspect;
     applyLang(data.language || "en");
   } catch {
     applyLang("en");
@@ -140,7 +141,8 @@ function setupSaveSettings() {
     const apiKey = (apiKeyInput && !apiKeyInput.includes("...")) ? apiKeyInput : "";
 
     try {
-      const body = { clip_count: clipCount, whisper_model: whisperModel, language: language };
+      const aspect = document.getElementById("aspect-select").value;
+      const body = { clip_count: clipCount, whisper_model: whisperModel, language: language, aspect: aspect };
       if (apiKey) body.api_key = apiKey;
 
       const r = await fetch(API + "/api/settings", {
@@ -579,6 +581,12 @@ function openEditor(clip) {
   tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
   title.textContent = clip.hook;
+
+  // Match the preview frame to the clip's aspect ratio
+  const vf = document.querySelector("#editor-modal .video-frame");
+  if (vf) vf.style.aspectRatio = (clip.aspect || "9:16").replace(":", " / ");
+  const badge = document.querySelector("#editor-modal .video-badge");
+  if (badge) badge.textContent = clip.aspect || "9:16";
 
   video.src = API + "/api/preview/" + currentJobId + "/" + encodeURIComponent(clip.filename);
   video.load();
@@ -1189,7 +1197,8 @@ function setupEditor() {
       length: zoomLength,
       strength: zoomStrength,
       cues: cues,
-      style: style
+      style: style,
+      aspect: currentEditingClip.aspect || "9:16"
     };
     if (cuts.length) payload.cuts = cuts;
 
