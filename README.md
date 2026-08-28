@@ -6,6 +6,8 @@ Paste a YouTube link or drop in your own video. ClipPulse uses **Google Gemini**
 
 > Building in public. Follow the journey on Threads [@yusifkishidir](https://www.threads.net/@yusifkishidir).
 
+> 📘 **New here?** Full step-by-step tutorial (install, Gemini key, your first clip in 5 min): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 ---
 
 ## ✨ Why ClipPulse?

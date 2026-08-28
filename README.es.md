@@ -3,6 +3,8 @@
 > **Pega un enlace de YouTube → la IA encuentra tus mejores momentos → subtítulos animados → listo para TikTok, Reels y Shorts.**
 > Gratis. Código abierto. Auto-alojado. Sin tarjeta. Sin límites de subida.
 
+> 📘 **¿Nuevo?** Tutorial completo paso a paso (instalación, clave de Gemini, tu primer clip en 5 min): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 [![Estrellas](https://img.shields.io/github/stars/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/stargazers)
 [![Discussions](https://img.shields.io/badge/Discussions-activo-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 

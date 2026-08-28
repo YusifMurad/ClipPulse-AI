@@ -3,6 +3,8 @@
 > **粘贴 YouTube 链接 → AI 找到最佳时刻 → 动画字幕 → 准备好发布到 TikTok、Reels 和 Shorts。**
 > 免费。开源。自托管。无需信用卡。无上传限制。
 
+> 📘 **刚入门？** 完整分步教程（安装、Gemini 密钥、5 分钟做出第一个片段）：<https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 [![Stars](https://img.shields.io/github/stars/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/stargazers)
 [![Discussions](https://img.shields.io/badge/Discussions-活跃-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 

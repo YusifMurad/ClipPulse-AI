@@ -3,6 +3,8 @@
 > **احرص رابط يوتيوب ← الذكاء الاصطناعي يجد أفضل لحظاتك ← ترجمة متحركة ← جاهز لـ TikTok وReels وShorts.**
 > مجاني. مفتوح المصدر. يُستضاف ذاتيًا. بدون بطاقة ائتمان. بدون حدود رفع.
 
+> 📘 **جديد هنا؟** شرح كامل خطوة بخطوة (التثبيت، مفتاح Gemini، أول مقطع في 5 دقائق): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 [![النجوم](https://img.shields.io/github/stars/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/stargazers)
 [![النقاشات](https://img.shields.io/badge/Discussions-نشط-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 

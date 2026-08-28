@@ -200,6 +200,11 @@ body {
   color: var(--danger);
 }
 
+a.nav-btn {
+  text-decoration: none;
+  color: inherit;
+}
+
 .sidebar-bottom {
   margin-top: auto;
   padding-top: 12px;

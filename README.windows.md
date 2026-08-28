@@ -7,6 +7,8 @@ ClipPulse is fully cross-platform — the same code runs on Linux, macOS, and Wi
 > **`start.bat`** (Command Prompt). The script creates a virtual environment and
 > installs everything for you.
 
+> 📘 **New here?** Full step-by-step tutorial (install, Gemini key, your first clip in 5 min): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 ---
 
 ## 1. What you need

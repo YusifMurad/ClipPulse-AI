@@ -3,6 +3,8 @@
 > **YouTube linki yapıştır → AI en iyi anları bulur → Animasyonlu altyazı → TikTok, Reels ve Shorts'a hazır.**
 > Ücretsiz. Açık kaynak. Kendi sunucunda. Kredi kartı yok. Yükleme sınırı yok.
 
+> 📘 **Yeni başlayanlar için:** Adım adım tam eğitim (kurulum, Gemini anahtarı, 5 dakikada ilk klipin): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
+
 [![Yıldız](https://img.shields.io/github/stars/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/stargazers)
 [![Discussions](https://img.shields.io/badge/Discussions-aktif-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 [![Docker](https://img.shields.io/badge/Docker-hazır-blue?logo=docker&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/pkgs/container/clippulse-ai)
