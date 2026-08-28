@@ -421,7 +421,10 @@ function updateProgress(data) {
 function showClips(data) {
   document.getElementById("progress-section").style.display = "none";
   document.getElementById("clips-section").style.display = "block";
-  document.getElementById("clips-title").textContent = (data.result?.title || t("clips_title")) + " — " + t("clips_title");
+  const rawTitle = data.result?.title || "";
+  const cleanTitle = rawTitle ? rawTitle.split(/[\\/]/).pop() : "";
+  document.getElementById("clips-title").textContent =
+    cleanTitle ? cleanTitle + " — " + t("clips_title") : t("clips_title");
 
   const result = data.result || data;
   const clips = result.clips || [];
