@@ -396,6 +396,7 @@ def update_clip(job_id, filename):
     strength = float(data.get("strength", 1.3) or 1.3)
     length_frac = float(data.get("length", 1.0) or 1.0)
     aspect = data.get("aspect", "9:16")
+    speaker = (data.get("speaker") or "").strip()
 
     try:
         recut_clip(str(clip_path), job_dir, filename, start, end, ass_content,
@@ -422,6 +423,7 @@ def update_clip(job_id, filename):
             if c.get("filename") == filename:
                 c["effect"] = effect
                 c["aspect"] = aspect
+                c["speaker"] = speaker
                 break
         persist_job(job_id)
         return jsonify({"ok": True, "message": "Clip updated"})

@@ -338,22 +338,23 @@ BÖLÜM 5 — ÇIKTI FORMATI
 
 Return ONLY a JSON array (no markdown, no explanation) with objects like:
 [
-  {{
-    "clip_id": 1,
-    "start": 272.0,
-    "end": 318.0,
-    "hook_sentence": "İlk cümle buraya",
-    "closing_sentence": "Son cümle buraya",
-    "viral_score": 84,
-    "hook_title": "5 kelimelik başlık",
-    "reason": "Bu klibi seçme gerekçen (1 cümle)",
-    "zoom_in": {{
-      "start": "0.0s",
-      "end": "0.6s",
-      "from_scale": 1.12,
-      "to_scale": 1.00
-    }}
-  }}
+    {{
+     "clip_id": 1,
+     "start": 272.0,
+     "end": 318.0,
+     "hook_sentence": "İlk cümle buraya",
+     "closing_sentence": "Son cümle buraya",
+     "viral_score": 84,
+     "hook_title": "5 kelimelik başlık",
+     "reason": "Bu klibi seçme gerekçen (1 cümle)",
+     "speaker": "Konuşmacı adı (opsiyonel)",
+     "zoom_in": {{
+       "start": "0.0s",
+       "end": "0.6s",
+       "from_scale": 1.12,
+       "to_scale": 1.00
+     }}
+   }}
 ]
 
 Kurallar:
@@ -361,6 +362,7 @@ Kurallar:
 - Çeşitli anlar seç (hepsi aynı bölümde olmasın)
 - Her klip bağımsız olarak anlamlı olmalı
 - hook_title ve reason {lang_name} dilinde, hook_sentence/closing_sentence orijinal dilinde
+- "speaker" alanını SADECE bir klip net şekilde tek ve isimlendirilebilir bir kişi tarafından söyleniyorsa ekle (örn. isim geçiyorsa). Birden fazla konuşmacı veya belirsizse bu alanı HIÇ EKLEME.
 - Sadece JSON array döndür, başka bir şey yazma"""
 
     response = None
@@ -1031,6 +1033,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
                 "effect": clip_effect,
                 "zoom_in": moment.get("zoom_in", {}),
                 "aspect": aspect,
+                "speaker": moment.get("speaker", ""),
             }
 
         import concurrent.futures as _cf

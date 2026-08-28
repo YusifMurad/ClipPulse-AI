@@ -461,6 +461,7 @@ function showClips(data) {
 
         <div class="clip-header">
           <div class="clip-hook">${escapeHtml(clip.hook)}</div>
+          ${clip.speaker ? `<span class="clip-speaker">${escapeHtml(clip.speaker)}</span>` : ""}
           <div class="clip-score" style="background:${scoreColor};">${score}</div>
         </div>
         <div class="clip-reason">${escapeHtml(clip.reason)} (${startMin}:${String(startSec).padStart(2,"0")} — ${endMin}:${String(endSec).padStart(2,"0")})</div>
@@ -616,6 +617,9 @@ function openEditor(clip) {
   tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
   title.textContent = clip.hook;
+
+  const spk = document.getElementById("st-speaker");
+  if (spk) spk.value = clip.speaker || "";
 
   // Match the preview frame to the clip's aspect ratio
   const vf = document.querySelector("#editor-modal .video-frame");
@@ -1242,7 +1246,8 @@ function setupEditor() {
       strength: zoomStrength,
       cues: cues,
       style: style,
-      aspect: currentEditingClip.aspect || "9:16"
+      aspect: currentEditingClip.aspect || "9:16",
+      speaker: (document.getElementById("st-speaker")?.value || "").trim()
     };
     if (cuts.length) payload.cuts = cuts;
 

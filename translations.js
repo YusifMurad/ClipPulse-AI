@@ -133,7 +133,8 @@ window.I18N = {
     "diff_desc": "ClipPulse runs entirely in your browser and local server. Your Gemini key stays with you, files are processed locally, and there's no monthly lock-in.",
     "set_aspect_label": "Aspect ratio",
     "set_aspect_hint": "9:16 for Reels/Shorts/TikTok, 16:9 for YouTube, 1:1 for feed posts.",
-    "presets_label": "Style presets"
+    "presets_label": "Style presets",
+    "editor_speaker": "Speaker"
   },
   "tr": {
    "nav_home": "Ev.",
@@ -269,7 +270,8 @@ window.I18N = {
     "diff_desc": "ClipPulse tamamen tarayıcınızda ve yerel sunucuda çalışır. Gemini anahtarınız sizde kalır, dosyalar yerelde işlenir ve aylık kilitlenme yoktur.",
     "set_aspect_label": "En-boy oranı",
     "set_aspect_hint": "9:16 Reels/Shorts/TikTok, 16:9 YouTube, 1:1 gönderiler için.",
-    "presets_label": "Stil ön ayarları"
+    "presets_label": "Stil ön ayarları",
+    "editor_speaker": "Konuşmacı"
   },
   "de": {
    "nav_home": "Homepage",
@@ -405,7 +407,8 @@ window.I18N = {
     "diff_desc": "ClipPulse läuft komplett in deinem Browser und lokalem Server. Dein Gemini-Key bleibt bei dir, Dateien werden lokal verarbeitet, kein monatliches Lock-in.",
     "set_aspect_label": "Bildformat",
     "set_aspect_hint": "9:16 für Reels/Shorts/TikTok, 16:9 für YouTube, 1:1 für Feed-Posts.",
-    "presets_label": "Stil-Vorlagen"
+    "presets_label": "Stil-Vorlagen",
+    "editor_speaker": "Sprecher"
   },
   "fr": {
    "nav_home": "Page d'accueil",
@@ -541,7 +544,8 @@ window.I18N = {
     "diff_desc": "ClipPulse fonctionne entièrement dans votre navigateur et serveur local. Votre clé Gemini reste avec vous, les fichiers sont traités localement, sans engagement mensuel.",
     "set_aspect_label": "Ratio d'aspect",
     "set_aspect_hint": "9:16 pour Reels/Shorts/TikTok, 16:9 pour YouTube, 1:1 pour les posts.",
-    "presets_label": "Styles prédéfinis"
+    "presets_label": "Styles prédéfinis",
+    "editor_speaker": "Intervenant"
   },
   "es": {
    "nav_home": "Inicio",
@@ -677,7 +681,8 @@ window.I18N = {
     "diff_desc": "ClipPulse se ejecuta en tu navegador y servidor local. Tu clave Gemini se queda contigo, los archivos se procesan localmente y sin permanencia mensual.",
     "set_aspect_label": "Relación de aspecto",
     "set_aspect_hint": "9:16 para Reels/Shorts/TikTok, 16:9 para YouTube, 1:1 para feed.",
-    "presets_label": "Estilos predefinidos"
+    "presets_label": "Estilos predefinidos",
+    "editor_speaker": "Interviniente"
   },
   "it": {
    "nav_home": "Homepage",
@@ -813,7 +818,8 @@ window.I18N = {
     "diff_desc": "ClipPulse gira interamente nel tuo browser e server locale. La tua chiave Gemini resta con te, i file sono elaborati localmente e non c'è alcun vincolo mensuale.",
     "set_aspect_label": "Rapporto d'aspetto",
     "set_aspect_hint": "9:16 per Reels/Shorts/TikTok, 16:9 per YouTube, 1:1 per i post.",
-    "presets_label": "Stili predefiniti"
+    "presets_label": "Stili predefiniti",
+    "editor_speaker": "Relatore"
   },
   "pt": {
    "nav_home": "Casa",
@@ -949,7 +955,8 @@ window.I18N = {
     "diff_desc": "O ClipPulse roda inteiramente no seu navegador e servidor local. Sua chave Gemini fica com você, os arquivos são processados localmente e sem fidelidade mensal.",
     "set_aspect_label": "Proporção",
     "set_aspect_hint": "9:16 para Reels/Shorts/TikTok, 16:9 para YouTube, 1:1 para feed.",
-    "presets_label": "Estilos predefinidos"
+    "presets_label": "Estilos predefinidos",
+    "editor_speaker": "Participante"
   },
   "ru": {
    "nav_home": "\u0414\u043e\u043c\u043e\u0439",
@@ -1085,7 +1092,8 @@ window.I18N = {
     "diff_desc": "ClipPulse работает полностью в вашем браузере и локальном сервере. Ваш Gemini-ключ остаётся у вас, файлы обрабатываются локально, без ежемесячной привязки.",
     "set_aspect_label": "Соотношение сторон",
     "set_aspect_hint": "9:16 для Reels/Shorts/TikTok, 16:9 для YouTube, 1:1 для постов.",
-    "presets_label": "Готовые стили"
+    "presets_label": "Готовые стили",
+    "editor_speaker": "Спикер"
   },
   "ar": {
    "nav_home": "\u0627\u0644\u0645\u0646\u0632\u0644",
@@ -1221,7 +1229,8 @@ window.I18N = {
     "diff_desc": "يعمل ClipPulse بالكامل في متصفحك وخادمك المحلي. مفتاح Gemini يبقى معك، والملفات تُعالج محليًا، دون ارتباط شهري.",
     "set_aspect_label": "نسبة الأبعاد",
     "set_aspect_hint": "9:16 لـ Reels/Shorts/TikTok، 16:9 لـ YouTube، 1:1 للمنشورات.",
-    "presets_label": "أنماط جاهزة"
+    "presets_label": "أنماط جاهزة",
+    "editor_speaker": "المتحدث"
   },
   "ja": {
    "nav_home": "\u30db\u30fc\u30e0",
@@ -1357,7 +1366,8 @@ window.I18N = {
     "diff_desc": "ClipPulseはブラウザとローカルサーバーだけで動きます。Geminiキーはあなたの手元にあり、ファイルはローカルで処理され、月額縛りはありません。",
     "set_aspect_label": "アスペクト比",
     "set_aspect_hint": "9:16はReels/Shorts/TikTok、16:9はYouTube、1:1はフィード投稿向け。",
-    "presets_label": "スタイルプリセット"
+    "presets_label": "スタイルプリセット",
+    "editor_speaker": "話し手"
   },
   "ko": {
    "nav_home": "\ud648",
@@ -1493,7 +1503,8 @@ window.I18N = {
     "diff_desc": "ClipPulse는 브라우저와 로컬 서버에서만 돌아갑니다. Gemini 키는 당신이 가지며, 파일은 로컬에서 처리되고 월 구독 묶임이 없습니다.",
     "set_aspect_label": "화면 비율",
     "set_aspect_hint": "9:16은 Reels/Shorts/TikTok, 16:9은 YouTube, 1:1은 피드 게시물용.",
-    "presets_label": "스타일 프리셋"
+    "presets_label": "스타일 프리셋",
+    "editor_speaker": "화자"
   },
   "zh": {
    "nav_home": "\u9996\u9875",
@@ -1629,7 +1640,8 @@ window.I18N = {
     "diff_desc": "ClipPulse 完全在你的浏览器和本地服务器运行。你的 Gemini 密钥由你保管，文件本地处理，没有月度绑定。",
     "set_aspect_label": "画幅比例",
     "set_aspect_hint": "9:16 用于 Reels/Shorts/TikTok，16:9 用于 YouTube，1:1 用于信息流。",
-    "presets_label": "样式预设"
+    "presets_label": "样式预设",
+    "editor_speaker": "说话人"
   },
   "hi": {
    "nav_home": "\u092e\u0941\u0916 \u092a\u0943\u0937\u094d\u0920",
@@ -1765,7 +1777,8 @@ window.I18N = {
     "diff_desc": "ClipPulse पूरी तरह आपके ब्राउज़र और लोकल सर्वर पर चलता है। आपकी Gemini कुंजी आपके पास रहती है, फ़ाइलें लोकल प्रोसेस होती हैं और कोई मासिक लॉक-इन नहीं।",
     "set_aspect_label": "आस्पेक्ट रेशियो",
     "set_aspect_hint": "9:16 Reels/Shorts/TikTok के लिए, 16:9 YouTube के लिए, 1:1 फ़ीड पोस्ट के लिए।",
-    "presets_label": "स्टाइल प्रीसेट"
+    "presets_label": "स्टाइल प्रीसेट",
+    "editor_speaker": "वक्ता"
   },
   "nl": {
    "nav_home": "Homepage",
@@ -1901,6 +1914,7 @@ window.I18N = {
     "diff_desc": "ClipPulse draait volledig in je browser en lokale server. Je Gemini-sleutel blijft bij je, bestanden worden lokaal verwerkt en er is geen maandelijkse lock-in.",
     "set_aspect_label": "Beeldverhouding",
     "set_aspect_hint": "9:16 voor Reels/Shorts/TikTok, 16:9 voor YouTube, 1:1 voor feed-posts.",
-    "presets_label": "Stijlvoorinstellingen"
+    "presets_label": "Stijlvoorinstellingen",
+    "editor_speaker": "Spreker"
   }
 };
