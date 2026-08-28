@@ -562,7 +562,7 @@ const DEFAULT_STYLE = {
 let tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
 // Zoom/pan state (draggable focus + animation length)
-let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0;
+let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0, zoomStrength = 1.4;
 
 function openEditor(clip) {
   currentEditingClip = clip;
@@ -1171,7 +1171,7 @@ function setupEditor() {
       effect: effect,
       focus: [+zoomFx.toFixed(4), +zoomFy.toFixed(4)],
       length: zoomLength,
-      strength: 1.3,
+      strength: zoomStrength,
       cues: cues,
       style: style
     };
