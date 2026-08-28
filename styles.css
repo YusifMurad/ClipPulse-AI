@@ -1095,6 +1095,20 @@ h2 {
 .zoom-controls .style-row { margin-bottom: 8px; }
 .zoom-controls .rv { min-width: 36px; text-align: right; }
 
+.zoom-interval-row {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.zoom-interval-val {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--text);
+}
+
 .zoom-hint {
   margin: 6px 0 0;
   font-size: 11px;

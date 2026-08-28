@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=11" />
+    <link rel="stylesheet" href="styles.css?v=12" />
   </head>
   <body>
     <div id="app">
@@ -271,6 +271,10 @@
                 <div id="zoom-controls" class="zoom-controls">
                   <div class="style-row"><label data-i18n="anim_length">Anim uzunluğu</label><input type="range" id="st-length" min="0.1" max="1.0" step="0.05" value="1.0"><span class="rv" id="rv-length">1.00</span></div>
                   <p class="zoom-hint" data-i18n="zoom_hint">Önizlemedeki kutuyu videonun istediğin yerine sürükle — zoom o noktaya odaklanır.</p>
+                  <div class="zoom-interval-row">
+                    <span data-i18n="zoom_interval">Zoom aralığı</span>:
+                    <span id="zoom-interval-val" class="zoom-interval-val">0.00s – 0.00s</span>
+                  </div>
                 </div>
                 <label class="sel"><span data-i18n="lbl_font">Font</span>
                   <select id="st-fontname"></select>
@@ -317,7 +321,7 @@
       </div>
     </div>
 
-    <script src="translations.js?v=5"></script>
-    <script src="app.js?v=22"></script>
+    <script src="translations.js?v=6"></script>
+    <script src="app.js?v=23"></script>
   </body>
 </html>

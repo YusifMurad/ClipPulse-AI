@@ -554,7 +554,7 @@ const FONTS = [
 ];
 const DEFAULT_STYLE = {
   primary: "#ffffff", secondary: "#ffff00", outline: "#000000", back: "#ec4899",
-  fontsize: 74, bold: true, outline_w: 9, shadow: 6, marginv: 100,
+  fontsize: 74, bold: true, outline_w: 14, shadow: 8, marginv: 100,
   fontname: "Arial",
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
@@ -563,7 +563,7 @@ const DEFAULT_STYLE = {
 let tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
 // Zoom/pan state (draggable focus + animation length)
-let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0, zoomStrength = 1.4;
+let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0, zoomStrength = 1.5;
 
 function openEditor(clip) {
   currentEditingClip = clip;
@@ -642,6 +642,15 @@ function syncZoomUI() {
   applyZoomPreview();
 }
 
+function updateZoomInterval() {
+  const el = document.getElementById("zoom-interval-val");
+  if (!el) return;
+  const v = document.getElementById("editor-video");
+  const dur = v && v.duration ? v.duration : 0;
+  const end = zoomLength * dur;
+  el.textContent = `0.00s – ${end.toFixed(2)}s`;
+}
+
 function applyZoomPreview() {
   const v = document.getElementById("editor-video");
   if (!v) return;
@@ -655,8 +664,10 @@ function applyZoomPreview() {
   if (effect === "zoom-out") z = zoomStrength - (zoomStrength - 1) * p;
   else if (effect === "pop") z = 1 + (zoomStrength - 1) * Math.sin(Math.PI * p);
   else z = 1 + (zoomStrength - 1) * p; // zoom-in / ken-burns
+  // Scale + translate the VIDEO CONTENT (not the frame) so the clip itself zooms.
   v.style.transformOrigin = (zoomFx * 100) + "% " + (zoomFy * 100) + "%";
   v.style.transform = `translate(${(0.5 - zoomFx) * 100}%, ${(0.5 - zoomFy) * 100}%) scale(${z})`;
+  updateZoomInterval();
 }
 
 function setupZoomHandlers() {

@@ -420,7 +420,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Word, Arial, 74, &H00FFFFFF, &H00FFFFFF, &H00000000, &H00000000, 1, 0, 0, 0, 100, 100, 0, 0, 1, 8, 4, 2, 60, 60, 100, 1
+Style: Word, Arial, 74, &H00FFFFFF, &H00FFFFFF, &H00000000, &H00000000, 1, 0, 0, 0, 100, 100, 0, 0, 1, 14, 8, 2, 60, 60, 100, 1
 WrapStyle: 1
 
 [Events]
@@ -495,8 +495,8 @@ def build_ass_header(style):
     back = hex_to_ass(style.get("back", "#000000"))
     fontsize = int(style.get("fontsize", 74))
     bold = 1 if style.get("bold", True) else 0
-    outline_w = int(style.get("outline_w", 9))
-    shadow = int(style.get("shadow", 6))
+    outline_w = int(style.get("outline_w", 14))
+    shadow = int(style.get("shadow", 8))
     marginv = int(style.get("marginv", 100))
     fontname = style.get("fontname", "Arial")
     style_line = (
@@ -817,11 +817,9 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
         zoom = build_zoom_filter(effect, 1080, 1920, duration, fps,
                                  focus=focus, strength=strength, length_frac=length_frac)
     crop_part = "crop=1080:1920"
-    vf_parts = [f"scale=1080:1920:force_original_aspect_ratio=increase", crop_part]
+    vf1 = f"scale=1080:1920:force_original_aspect_ratio=increase,{crop_part}"
     if zoom:
-        vf_parts.append(zoom)
-    vf_parts.append(sub_filter)
-    vf = ",".join(vf_parts)
+        vf1 += "," + zoom
 
     # Gentle edge fades remove start/end clicks/pops caused by hard cuts
     audio_filter = None
@@ -829,7 +827,21 @@ def cut_clip(video_path, start, end, srt_content, output_path, ass_content=None,
         fade_out_st = max(0.0, duration - 0.1)
         audio_filter = f"afade=t=in:d=0.05,afade=t=out:st={fade_out_st:.3f}:d=0.1"
     input_args = ["-ss", str(start), "-i", video_path, "-t", str(duration)]
-    _ffmpeg_encode(input_args, vf, output_path, threads=threads, audio_filter=audio_filter)
+
+    if sub_filter:
+        # Two-pass render: first the video (with zoom) WITHOUT subtitles, then
+        # burn the freshly timed subtitles onto the already-rendered clip. This
+        # guarantees captions stay perfectly in sync with the final video instead
+        # of drifting when the zoom filter alters the frame timeline.
+        video_tmp = output_path.with_suffix(".vtmp.mp4")
+        _ffmpeg_encode(input_args, vf1, video_tmp, threads=threads, audio_filter=audio_filter)
+        _ffmpeg_encode(["-i", str(video_tmp)], sub_filter, output_path, threads=threads)
+        try:
+            video_tmp.unlink()
+        except OSError:
+            pass
+    else:
+        _ffmpeg_encode(input_args, vf1, output_path, threads=threads, audio_filter=audio_filter)
 
 
 def srt_path_escape(p):
