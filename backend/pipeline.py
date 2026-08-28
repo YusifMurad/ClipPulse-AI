@@ -251,7 +251,7 @@ LANG_NAMES = {
 }
 
 
-def find_moments_gemini(transcript_text, api_key, title="", num_clips=8, language=None):
+def find_moments_gemini(transcript_text, api_key, title="", num_clips=8, language=None, on_retry=None):
     """Ask Gemini to find the best viral moments using professional clip editing algorithm."""
     client = genai.Client(api_key=api_key)
 
@@ -331,9 +331,40 @@ Kurallar:
 - hook_title ve reason {lang_name} dilinde, hook_sentence/closing_sentence orijinal dilinde
 - Sadece JSON array döndür, başka bir şey yazma"""
 
-    response = client.models.generate_content(
-        model="gemini-3.6-flash", contents=prompt
-    )
+    response = None
+    max_retries = 6
+    backoff = 3.0
+    last_err = None
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model="gemini-3.6-flash", contents=prompt
+            )
+            break
+        except Exception as e:  # noqa: BLE001
+            last_err = e
+            code = getattr(e, "code", None)
+            status = str(getattr(e, "status", "") or "")
+            msg = str(e)
+            retryable = (
+                code in (429, 500, 502, 503, 504)
+                or "503" in msg
+                or "UNAVAILABLE" in status
+                or "RESOURCE_EXHAUSTED" in status
+                or "429" in msg
+                or "DeadlineExceeded" in status
+            )
+            if not retryable or attempt == max_retries - 1:
+                raise
+            wait = backoff * (2 ** attempt)
+            if on_retry:
+                try:
+                    on_retry(attempt + 1, max_retries, wait, msg)
+                except Exception:
+                    pass
+            time.sleep(wait)
+    if response is None:
+        raise RuntimeError(f"Gemini yanıt vermedi (deneme sayısı aşıldı): {last_err}")
     text = response.text.strip()
     # Strip markdown code fences if present
     text = re.sub(r"^```(?:json)?\s*", "", text)
@@ -910,7 +941,13 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
 
         emit("analyzing", progress=55)
         transcript_text = build_transcript_text(segments)
-        moments = find_moments_gemini(transcript_text, api_key, title, clip_count, language=language)
+        moments = find_moments_gemini(
+            transcript_text, api_key, title, clip_count, language=language,
+            on_retry=lambda a, m, w, err: emit(
+                "retrying", progress=55, attempt=a, max_retries=m, wait=w,
+                message="Gemini geçici olarak meşgul, yeniden deneniyor..."
+            ),
+        )
         emit("moments_found", count=len(moments), progress=70)
 
         total = len(moments)

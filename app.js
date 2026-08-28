@@ -371,6 +371,7 @@ const STATUS_KEYS = {
   transcribed: "status_transcribed",
   analyzing: "status_analyzing",
   moments_found: "status_moments_found",
+  retrying: "status_retrying",
   cutting_clip: "status_cutting_clip",
   done: "progress_done",
   error: "progress_error",
