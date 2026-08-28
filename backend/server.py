@@ -75,6 +75,27 @@ def cleanup():
     print("Sunucu kapanıyor.")
 
 atexit.register(cleanup)
+
+
+def clean_disk():
+    """Delete generated clips to free disk space.
+
+    User-downloaded clips live in the OS Downloads folder (not here), so they
+    are never touched. Everything under OUTPUT_DIR is server-generated and safe
+    to remove.
+    """
+    deleted = 0
+    for item in OUTPUT_DIR.iterdir():
+        try:
+            if item.is_dir():
+                shutil.rmtree(item, ignore_errors=True)
+            else:
+                item.unlink()
+            deleted += 1
+        except OSError:
+            pass
+    print(f"Clean Disk: removed {deleted} item(s) from {OUTPUT_DIR}")
+    return deleted
 # ----------------
 
 jobs = {}
@@ -468,8 +489,8 @@ def translations():
 
 @app.route("/api/cleanup", methods=["POST"])
 def manual_cleanup():
-    cleanup()
-    return jsonify({"ok": True})
+    n = clean_disk()
+    return jsonify({"ok": True, "deleted": n})
 
 
 if __name__ == "__main__":
