@@ -86,7 +86,7 @@ window.I18N = {
    "btn_save_clip": "Save & Re-Render",
    "tl_del": "Delete selected range (Del)",
    "tl_clear": "Clear cuts",
-   "tl_hint": "Drag to select a range to cut \u00b7 grab the white playhead to scrub \u00b7 Ctrl+B (or Split) to drop a cut point \u00b7 click a segment to select it \u00b7 \u232b to delete \u00b7 click a cut range to undo",
+   "tl_hint": "Drag to select a range to cut \u00b7 grab the white playhead to scrub \u00b7 Ctrl+B (or Split) to drop a cut point \u00b7 click a segment to select it \u00b7 \u232b to delete \u00b7 scroll wheel = zoom timeline \u00b7 click a cut range to undo",
    "focus_label": "FOCUS",
    "cue_start_title": "Start (s)",
    "cue_end_title": "End (s)",
@@ -109,7 +109,10 @@ window.I18N = {
    "tl_cut_title": "Deleted range - click to undo",
    "tl_times": "Duration: {dur}  -  Deleted: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "tr": {
    "nav_home": "Ev.",
@@ -198,7 +201,7 @@ window.I18N = {
    "btn_save_clip": "Kaydet ve Yeniden Olu\u015ftur",
    "tl_del": "Se\u00e7ili aral\u0131\u011f\u0131 sil (Del)",
    "tl_clear": "Kesikleri temizle",
-   "tl_hint": "Silinecek yeri se\u00e7mek i\u00e7in s\u00fcr\u00fckle \u00b7 ba\u015f\u0131 (beyaz \u00e7ubuk) tutup oynat \u00b7 kesim noktas\u0131 eklemek i\u00e7in Ctrl+B (veya B\u00f6l) \u00b7 bir par\u00e7ay\u0131 se\u00e7mek i\u00e7in t\u0131kla \u00b7 silmek i\u00e7in \u232b \u00b7 silinen yere t\u0131kla geri al",
+   "tl_hint": "Silinecek yeri se\u00e7mek i\u00e7in s\u00fcr\u00fckle \u00b7 ba\u015f\u0131 (beyaz \u00e7ubuk) tutup oynat \u00b7 kesim noktas\u0131 i\u00e7in Ctrl+B (veya B\u00f6l) \u00b7 bir par\u00e7ay\u0131 se\u00e7mek i\u00e7in t\u0131kla \u00b7 silmek i\u00e7in \u232b \u00b7 zaman \u00e7izelgesinde kayd\u0131rma tekerle\u011fi = yak\u0131nla\u015ft\u0131r \u00b7 silinen yere t\u0131kla geri al",
    "focus_label": "ODAK",
    "cue_start_title": "%s\u2019e Ba\u015fla",
    "cue_end_title": "%s Bitir",
@@ -221,7 +224,10 @@ window.I18N = {
    "tl_cut_title": "Silinen aral\u0131k - geri almak i\u00e7in t\u0131klay\u0131n",
    "tl_times": "S\u00fcre: {dur}  -  Silindi: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "S\u0131\u011fd\u0131r",
+   "tl_sel_label": "Se\u00e7im (sn)",
+   "tl_zoom_full": "t\u00fcm klip"
   },
   "de": {
    "nav_home": "Homepage",
@@ -333,7 +339,10 @@ window.I18N = {
    "tl_cut_title": "Gel\u00f6schter Bereich - Zum R\u00fcckg\u00e4ngigmachen klicken",
    "tl_times": "Dauer: {dur}  -  Gel\u00f6scht: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "fr": {
    "nav_home": "Page d'accueil",
@@ -445,7 +454,10 @@ window.I18N = {
    "tl_cut_title": "Plage supprim\u00e9e - cliquez pour annuler",
    "tl_times": "Dur\u00e9e\u00a0: {dur}  -  Supprim\u00e9\u00a0: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "es": {
    "nav_home": "Inicio",
@@ -557,7 +569,10 @@ window.I18N = {
    "tl_cut_title": "Rango eliminado - haga clic para deshacer",
    "tl_times": "Duraci\u00f3n: {dur}  -  Eliminado: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "it": {
    "nav_home": "Homepage",
@@ -669,7 +684,10 @@ window.I18N = {
    "tl_cut_title": "Intervallo eliminato: fai clic per annullare",
    "tl_times": "Durata: {dur}  -  Eliminato: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "pt": {
    "nav_home": "Casa",
@@ -781,7 +799,10 @@ window.I18N = {
    "tl_cut_title": "Intervalo exclu\u00eddo - clique para desfazer",
    "tl_times": "Dura\u00e7\u00e3o: {dur}  -  Exclu\u00eddo: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "ru": {
    "nav_home": "\u0414\u043e\u043c\u043e\u0439",
@@ -893,7 +914,10 @@ window.I18N = {
    "tl_cut_title": "\u0423\u0434\u0430\u043b\u0435\u043d\u043d\u044b\u0439 \u0434\u0438\u0430\u043f\u0430\u0437\u043e\u043d - \u043d\u0430\u0436\u043c\u0438\u0442\u0435, \u0447\u0442\u043e\u0431\u044b \u043e\u0442\u043c\u0435\u043d\u0438\u0442\u044c",
    "tl_times": "\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435\u043b\u044c\u043d\u043e\u0441\u0442\u044c: {dur}  -  \u0423\u0434\u0430\u043b\u0435\u043d\u043e: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "ar": {
    "nav_home": "\u0627\u0644\u0645\u0646\u0632\u0644",
@@ -1005,7 +1029,10 @@ window.I18N = {
    "tl_cut_title": "\u0627\u0644\u0646\u0637\u0627\u0642 \u0627\u0644\u0645\u062d\u0630\u0648\u0641 - \u0627\u0646\u0642\u0631 \u0644\u0644\u062a\u0631\u0627\u062c\u0639",
    "tl_times": "\u0627\u0644\u0645\u062f\u0629: {dur}  -  \u0645\u062d\u0630\u0648\u0641: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "ja": {
    "nav_home": "\u30db\u30fc\u30e0",
@@ -1117,7 +1144,10 @@ window.I18N = {
    "tl_cut_title": "\u524a\u9664\u3055\u308c\u305f\u7bc4\u56f2-\u30af\u30ea\u30c3\u30af\u3057\u3066\u5143\u306b\u623b\u3059",
    "tl_times": "\u671f\u9593\uff1a {dur} -\u524a\u9664\uff1a {n} \uff08 {cut} \uff09",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "ko": {
    "nav_home": "\ud648",
@@ -1229,7 +1259,10 @@ window.I18N = {
    "tl_cut_title": "\uc0ad\uc81c\ub41c \ubc94\uc704 - \ud074\ub9ad\ud558\uc5ec \uc2e4\ud589 \ucde8\uc18c",
    "tl_times": "\uae30\uac04: {dur} - \uc0ad\uc81c\ub428: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "zh": {
    "nav_home": "\u9996\u9875",
@@ -1341,7 +1374,10 @@ window.I18N = {
    "tl_cut_title": "\u5df2\u5220\u9664\u8303\u56f4-\u5355\u51fb\u4ee5\u64a4\u6d88",
    "tl_times": "\u6301\u7eed\u65f6\u95f4\uff1a {dur} -\u5df2\u5220\u9664\uff1a {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "hi": {
    "nav_home": "\u092e\u0941\u0916 \u092a\u0943\u0937\u094d\u0920",
@@ -1453,7 +1489,10 @@ window.I18N = {
    "tl_cut_title": "\u0939\u091f\u093e\u0908 \u0917\u0908 \u0938\u0940\u092e\u093e - \u092a\u0942\u0930\u094d\u0935\u0935\u0924 \u0915\u0930\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f \u0915\u094d\u0932\u093f\u0915 \u0915\u0930\u0947\u0902",
    "tl_times": "\u0905\u0935\u0927\u093f: {dur}  -  \u0939\u091f\u093e\u092f\u093e \u0917\u092f\u093e: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   },
   "nl": {
    "nav_home": "Homepage",
@@ -1565,6 +1604,9 @@ window.I18N = {
    "tl_cut_title": "Verwijderd bereik - klik om ongedaan te maken",
    "tl_times": "Duur: {dur}  -  Verwijderd: {n} ({cut})",
    "tl_split": "\u2702 Split (Ctrl+B)",
-   "tl_split_remove": "Split point \u2014 click to remove"
+   "tl_split_remove": "Split point \u2014 click to remove",
+   "tl_zoom_reset": "Fit",
+   "tl_sel_label": "Selection (s)",
+   "tl_zoom_full": "full clip"
   }
 };

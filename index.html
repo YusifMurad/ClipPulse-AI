@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css?v=10" />
+    <link rel="stylesheet" href="styles.css?v=11" />
   </head>
   <body>
     <div id="app">
@@ -233,6 +233,17 @@
                   <div class="tl-segs" id="tl-segs"></div>
                   <div class="tl-splits" id="tl-splits"></div>
                   <div class="tl-play" id="tl-play"></div>
+                </div>
+                <div class="tl-readout">
+                  <span id="tl-zoom-info" class="tl-zoom-info"></span>
+                  <button type="button" class="btn-ghost xs" id="tl-zoom-reset" data-i18n="tl_zoom_reset">⤢ Fit</button>
+                </div>
+                <div class="tl-sel-row">
+                  <label data-i18n="tl_sel_label">Selection (s)</label>
+                  <input type="number" id="sel-start" step="0.001" min="0" class="sel-num" title="start (s)">
+                  <span>–</span>
+                  <input type="number" id="sel-end" step="0.001" min="0" class="sel-num" title="end (s)">
+                  <span id="sel-len" class="sel-len">–</span>
                 </div>
                 <div class="tl-times" id="tl-times"></div>
               </div>

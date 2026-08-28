@@ -553,13 +553,13 @@ const FONTS = [
 ];
 const DEFAULT_STYLE = {
   primary: "#ffffff", secondary: "#ffff00", outline: "#000000", back: "#ec4899",
-  fontsize: 74, bold: true, outline_w: 6, shadow: 4, marginv: 100,
+  fontsize: 74, bold: true, outline_w: 9, shadow: 6, marginv: 100,
   fontname: "Arial",
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
 
-// Timeline state (deleted ranges + current selection + split points; clip-relative seconds)
-let tl = { dur: 0, cuts: [], sel: null, splits: [] };
+// Timeline state (deleted ranges + current selection + split points + viewport; clip-relative seconds)
+let tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
 // Zoom/pan state (draggable focus + animation length)
 let zoomFx = 0.5, zoomFy = 0.5, zoomLength = 1.0;
@@ -571,7 +571,7 @@ function openEditor(clip) {
   const title = document.getElementById("editor-title");
 
   // Reset timeline state so no stale deletions carry over
-  tl = { dur: 0, cuts: [], sel: null };
+  tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
   title.textContent = clip.hook;
 
@@ -735,16 +735,24 @@ function initTimeline(dur) {
   tl.cuts = [];
   tl.splits = [];
   tl.sel = null;
+  tl.view = { start: 0, end: tl.dur };
   updateTimelineUI();
 }
 
+// Map a clip-relative time to a % position within the current viewport (zoom)
 function tlPos(t) {
   if (!tl.dur) return "0%";
-  return ((t / tl.dur) * 100).toFixed(2) + "%";
+  const span = Math.max(1e-6, tl.view.end - tl.view.start);
+  const rel = (t - tl.view.start) / span;
+  return (Math.max(0, Math.min(1, rel)) * 100).toFixed(3) + "%";
 }
 
 function tlClamp(t) {
   return Math.max(0, Math.min(tl.dur, t));
+}
+
+function tlSpan() {
+  return Math.max(1e-6, tl.view.end - tl.view.start);
 }
 
 function fmtT(s) {
@@ -793,6 +801,29 @@ function updateTimelineUI() {
   const totalCut = tl.cuts.reduce((s, c) => s + (c[1] - c[0]), 0);
   document.getElementById("tl-times").textContent =
     t("tl_times", { dur: fmtT(tl.dur), n: tl.cuts.length, cut: fmtT(totalCut) });
+  // Viewport (zoom) readout
+  const zi = document.getElementById("tl-zoom-info");
+  if (zi) {
+    if (tl.view.end - tl.view.start < tl.dur - 1e-6)
+      zi.textContent = `🔍 ${tl.view.start.toFixed(2)}s – ${tl.view.end.toFixed(2)}s  (scroll = zoom · ⇧scroll = pan · dbl-click = fit)`;
+    else
+      zi.textContent = `🔍 ${t("tl_zoom_full") || "full clip"}`;
+  }
+  // Selection readout (precise seconds)
+  const ss = document.getElementById("sel-start");
+  const se = document.getElementById("sel-end");
+  const sl = document.getElementById("sel-len");
+  if (ss && se && sl) {
+    if (tl.sel) {
+      if (document.activeElement !== ss) ss.value = tl.sel[0].toFixed(3);
+      if (document.activeElement !== se) se.value = tl.sel[1].toFixed(3);
+      sl.textContent = (tl.sel[1] - tl.sel[0]).toFixed(3) + "s";
+    } else {
+      if (document.activeElement !== ss) ss.value = "";
+      if (document.activeElement !== se) se.value = "";
+      sl.textContent = "–";
+    }
+  }
 }
 
 // Add the current selection to the deleted ranges list
@@ -836,7 +867,7 @@ function setupTimelineHandlers() {
   function tFromEvent(e) {
     const r = track.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width;
-    return tlClamp(x * tl.dur);
+    return tlClamp(tl.view.start + x * tlSpan());
   }
 
   track.addEventListener("pointerdown", (e) => {
@@ -949,6 +980,54 @@ function setupTimelineHandlers() {
     play.addEventListener("pointerup", stopScrub);
     play.addEventListener("pointercancel", stopScrub);
   }
+
+  // --- Wheel zoom / pan on the timeline (mouse wheel = zoom in/out around cursor) ---
+  track.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const span = tlSpan();
+    const r = track.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width;
+    const cursorT = tl.view.start + x * span;
+    if (e.shiftKey) {
+      // Pan left/right with Shift + wheel
+      const pan = (e.deltaY / 200) * span;
+      let ns = Math.max(0, Math.min(tl.dur - span, tl.view.start + pan));
+      tl.view = { start: ns, end: ns + span };
+    } else {
+      const factor = e.deltaY < 0 ? 0.7 : 1.4;   // scroll up = zoom in
+      const newSpan = Math.max(0.05, Math.min(tl.dur, span * factor));
+      let ns = cursorT - x * newSpan;
+      let ne = ns + newSpan;
+      if (ns < 0) { ns = 0; ne = newSpan; }
+      if (ne > tl.dur) { ne = tl.dur; ns = Math.max(0, tl.dur - newSpan); }
+      tl.view = { start: ns, end: ne };
+    }
+    updateTimelineUI();
+  }, { passive: false });
+
+  // Double-click fits the whole clip (reset zoom)
+  track.addEventListener("dblclick", (e) => {
+    if (e.target.classList.contains("tl-split") || e.target.classList.contains("tl-cut")) return;
+    tl.view = { start: 0, end: tl.dur };
+    updateTimelineUI();
+  });
+
+  // Precise numeric selection (seconds) — directly type the cut range
+  const ss = document.getElementById("sel-start");
+  const se = document.getElementById("sel-end");
+  function applySelInputs() {
+    const a = parseFloat(ss.value), b = parseFloat(se.value);
+    if (isFinite(a) && isFinite(b) && b > a) {
+      tl.sel = [Math.max(0, a), Math.min(tl.dur, b)];
+      updateTimelineUI();
+    }
+  }
+  ss?.addEventListener("input", applySelInputs);
+  se?.addEventListener("input", applySelInputs);
+  document.getElementById("tl-zoom-reset")?.addEventListener("click", () => {
+    tl.view = { start: 0, end: tl.dur };
+    updateTimelineUI();
+  });
 }
 
 function applyStyleToInputs(s) {

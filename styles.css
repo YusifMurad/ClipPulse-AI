@@ -1475,7 +1475,13 @@ h2 {
   margin-left: -1.5px;
   background: #fff;
   box-shadow: 0 0 6px rgba(0,0,0,0.6);
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 5;
+}
+.tl-split:hover {
+  background: #ff4d4d;
+  width: 4px;
 }
 
 .tl-toolbar {
@@ -1530,6 +1536,55 @@ h2 {
   color: var(--text-secondary);
   margin-top: 8px;
   font-variant-numeric: tabular-nums;
+}
+
+.tl-readout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  min-height: 22px;
+}
+
+.tl-zoom-info {
+  font-size: 12px;
+  color: var(--accent, #ec4899);
+  font-variant-numeric: tabular-nums;
+  flex: 1;
+}
+
+.tl-sel-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.tl-sel-row label {
+  white-space: nowrap;
+}
+
+.sel-num {
+  width: 84px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #333);
+  background: var(--input-bg, #16161d);
+  color: var(--text, #fff);
+  font-variant-numeric: tabular-nums;
+}
+
+.sel-len {
+  margin-left: 4px;
+  color: var(--text, #fff);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-ghost.xs {
+  padding: 3px 9px;
+  font-size: 12px;
 }
 
 .tl-actions {

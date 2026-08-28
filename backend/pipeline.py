@@ -389,7 +389,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Word, Arial, 74, &H00FFFFFF, &H00FFFFFF, &H00000000, &H00000000, 1, 0, 0, 0, 100, 100, 0, 0, 1, 4, 2, 2, 60, 60, 100, 1
+Style: Word, Arial, 74, &H00FFFFFF, &H00FFFFFF, &H00000000, &H00000000, 1, 0, 0, 0, 100, 100, 0, 0, 1, 8, 4, 2, 60, 60, 100, 1
 WrapStyle: 1
 
 [Events]
@@ -408,7 +408,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             clipped_end = min(end_offset - start_offset, seg_end - start_offset)
             if clipped_end <= clipped_start:
                 continue
-            text = f"{{\\c&H00FFFF&\\b1}}{seg['text']}{{\\b0}}"
+            text = f"{{\\be2}}{{\\c&H00FFFF&\\b1}}{seg['text']}{{\\b0}}"
             events.append(f"Dialogue: 0,{fmt_ass_time(clipped_start)},{fmt_ass_time(clipped_end)},Word,,0,0,0,,{text}")
             continue
 
@@ -419,7 +419,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
             if w_end <= w_start:
                 continue
             word_text = (
-                f"{{\\1c&HFFFFFF&\\t({w_start:.2f},{w_end:.2f},\\1c&H00FFFF&)}}{w['word'].strip()}"
+                f"{{\\be2}}{{\\1c&HFFFFFF&\\t({w_start:.2f},{w_end:.2f},\\1c&H00FFFF&)}}{w['word'].strip()}"
             )
             line_text_words.append(word_text)
 
@@ -464,8 +464,8 @@ def build_ass_header(style):
     back = hex_to_ass(style.get("back", "#000000"))
     fontsize = int(style.get("fontsize", 74))
     bold = 1 if style.get("bold", True) else 0
-    outline_w = int(style.get("outline_w", 6))
-    shadow = int(style.get("shadow", 4))
+    outline_w = int(style.get("outline_w", 9))
+    shadow = int(style.get("shadow", 6))
     marginv = int(style.get("marginv", 100))
     fontname = style.get("fontname", "Arial")
     style_line = (
@@ -520,7 +520,7 @@ def build_ass_with_style(words, start_offset, end_offset, new_text, style):
             continue
         idle = hex_to_ass(lerp_color(grad_a, grad_b, i / max(1, n - 1))) if grad else primary
         text = (
-            f"{{\\1c{idle}\\t({ws:.2f},{we:.2f},\\1c{active})}}{nwi}"
+            f"{{\\be2}}{{\\1c{idle}\\t({ws:.2f},{we:.2f},\\1c{active})}}{nwi}"
         )
         events.append(
             f"Dialogue: 0,{fmt_ass_time(ws)},{fmt_ass_time(we)},Word,,0,0,0,,{text}"
