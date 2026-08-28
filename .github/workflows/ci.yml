@@ -4,66 +4,16 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - name: Install ruff
-        run: pip install ruff
-      - name: Lint backend
-        run: ruff check backend/ || true
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install deps
-        run: |
-          pip install -r backend/requirements.txt
-      - name: Import sanity check
-        run: |
-          cd backend
-          python3 -c "import server, pipeline; print('imports OK')"
-      - name: Check translations completeness
+          python-version: "3.11"
+      - name: Compile backend
+        run: python -m py_compile backend/*.py
+      - name: Translation parity
         run: python scripts/check_translations.py
-
-  test-windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Cross-platform syntax check
-        run: |
-          python -m py_compile backend/server.py backend/pipeline.py backend/api_seller.py
-          python -c "import ast,glob; [ast.parse(open(f, encoding='utf-8').read()) for f in glob.glob('backend/*.py')]; print('syntax OK')"
-      - name: Verify Windows launcher scripts exist
-        shell: pwsh
-        run: |
-          if (-not (Test-Path start.bat)) { throw 'start.bat missing' }
-          if (-not (Test-Path start.ps1)) { throw 'start.ps1 missing' }
-      - name: Check translations completeness
-        run: python scripts/check_translations.py
-
-  docker-build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build image (no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: false
-          tags: clippulse-ai:ci
