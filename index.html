@@ -344,6 +344,17 @@
                 <label class="chk"><input type="checkbox" id="st-bold" checked> <span data-i18n="chk_bold">Bold</span></label>
                 <label class="chk"><input type="checkbox" id="st-gradient"> <span data-i18n="chk_gradient">Gradient text</span></label>
               </div>
+              <div class="preset-row">
+                <span class="preset-label" data-i18n="presets_label">Style presets</span>
+                <div class="preset-btns">
+                  <button type="button" class="btn-ghost xs" data-preset="clippulse">ClipPulse</button>
+                  <button type="button" class="btn-ghost xs" data-preset="boldglow">Bold Glow</button>
+                  <button type="button" class="btn-ghost xs" data-preset="minimal">Minimal</button>
+                  <button type="button" class="btn-ghost xs" data-preset="sunset">Sunset</button>
+                  <button type="button" class="btn-ghost xs" id="preset-brand" data-preset="brand">My Brand</button>
+                  <button type="button" class="btn-ghost xs" id="save-brand-btn">Save brand</button>
+                </div>
+              </div>
               <div class="grad-row" id="grad-row" style="display:none">
                 <div class="style-row"><label data-i18n="lbl_grad_from">From</label><input type="color" id="st-grad-a" value="#ec4899"></div>
                 <div class="style-row"><label data-i18n="lbl_grad_to">To</label><input type="color" id="st-grad-b" value="#a855f7"></div>
@@ -371,7 +382,7 @@
       </div>
     </div>
 
-    <script src="translations.js?v=9"></script>
-    <script src="app.js?v=26"></script>
+    <script src="translations.js?v=10"></script>
+    <script src="app.js?v=27"></script>
   </body>
 </html>

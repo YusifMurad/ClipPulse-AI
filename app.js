@@ -565,6 +565,41 @@ const DEFAULT_STYLE = {
   gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7"
 };
 
+// Brand-kit style presets (one click to apply a full caption look)
+const PRESETS = {
+  clippulse: { primary: "#ffffff", secondary: "#ffff00", outline: "#000000", back: "#ec4899",
+    fontsize: 74, bold: true, outline_w: 14, shadow: 8, marginv: 100, fontname: "Poppins",
+    gradient: false, gradient_a: "#ec4899", gradient_b: "#a855f7" },
+  boldglow: { primary: "#ffffff", secondary: "#25d366", outline: "#0b3d1a", back: "#25d366",
+    fontsize: 82, bold: true, outline_w: 11, shadow: 11, marginv: 90, fontname: "Poppins",
+    gradient: false, gradient_a: "#25d366", gradient_b: "#16a34a" },
+  minimal: { primary: "#ffffff", secondary: "#ffffff", outline: "#000000", back: "#000000",
+    fontsize: 64, bold: true, outline_w: 6, shadow: 2, marginv: 120, fontname: "Poppins",
+    gradient: false, gradient_a: "#ffffff", gradient_b: "#cccccc" },
+  sunset: { primary: "#fff7ed", secondary: "#fb923c", outline: "#7c2d12", back: "#f97316",
+    fontsize: 76, bold: true, outline_w: 12, shadow: 9, marginv: 100, fontname: "Poppins",
+    gradient: true, gradient_a: "#f97316", gradient_b: "#db2777" }
+};
+
+function applyPreset(name) {
+  if (name === "brand") {
+    const brand = JSON.parse(localStorage.getItem("clippulse_brand") || "null");
+    if (!brand) { flashBrandBtn("No brand saved"); return; }
+    applyStyleToInputs(brand);
+  } else if (PRESETS[name]) {
+    applyStyleToInputs(PRESETS[name]);
+  }
+  updatePreview();
+}
+
+function flashBrandBtn(msg) {
+  const b = document.getElementById("preset-brand");
+  if (!b) return;
+  const old = b.textContent;
+  b.textContent = msg;
+  setTimeout(() => (b.textContent = old), 1200);
+}
+
 // Timeline state (deleted ranges + current selection + split points + viewport; clip-relative seconds)
 let tl = { dur: 0, cuts: [], sel: null, splits: [], view: { start: 0, end: 0 } };
 
@@ -1170,6 +1205,15 @@ function setupEditor() {
     applyStyleToInputs(DEFAULT_STYLE);
     updatePreview();
   };
+
+  // Brand-kit presets
+  document.querySelectorAll("[data-preset]").forEach(b => {
+    b.addEventListener("click", () => applyPreset(b.dataset.preset));
+  });
+  document.getElementById("save-brand-btn")?.addEventListener("click", () => {
+    localStorage.setItem("clippulse_brand", JSON.stringify(collectStyle()));
+    flashBrandBtn("Brand saved");
+  });
 
   document.getElementById("save-clip-btn").onclick = async () => {
     if (!currentEditingClip) return;
