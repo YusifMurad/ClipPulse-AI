@@ -6,6 +6,7 @@ import time
 import shutil
 import subprocess
 import tempfile
+import threading
 import traceback
 from pathlib import Path
 
@@ -104,29 +105,32 @@ def _find_deno():
     return shutil.which("deno")
 
 
-def download_video(url, job_dir, progress_cb=None):
+def download_video(url, job_dir, progress_cb=None, status_cb=None):
     """Download video from YouTube using yt-dlp CLI with retries.
 
-    Resolution is capped at 1080p so downloads stay fast (selecting
-    `bestvideo+bestaudio/best` can pull a multi-GB 4K file that looks "stuck").
-    If `progress_cb(percent)` is given, download progress is streamed live.
+    Resolution is capped at 720p so downloads + the post-download merge stay
+    fast (a 1080p/4K file can look "stuck" for minutes). If `progress_cb(percent)`
+    is given, download progress is streamed live; `status_cb(stage, **kw)` reports
+    stage changes (e.g. "merging") so the UI never looks frozen.
     """
     yt_dl = [sys.executable, "-m", "yt_dlp"]
     deno = _find_deno()
-    base_fmt = "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best"
+    base_fmt = "bestvideo[height<=720]+bestaudio/best[height<=720]/best"
 
-    # Strategies that work without a JS runtime
+    # Strategies that work without a JS runtime. Prefer a single-file (progressive)
+    # mp4 to skip the ffmpeg merge entirely; fall back to 720p DASH + merge.
     strategies = [
+        ["--impersonate", "chrome", "-f", "best[height<=720][ext=mp4]/best[height<=720]"],
+        ["-f", "best[height<=720][ext=mp4]/best[height<=720]"],
         ["--impersonate", "chrome", "-f", base_fmt],
         ["-f", base_fmt],
-        ["-f", "best[height<=1080][ext=mp4]/best[height<=1080]"],
     ]
     # If deno is available, prepend strategies that use it (better YouTube support)
     if deno:
         deno_rt = f"deno:{deno}"
         strategies = [
             ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--remote-components", "ejs:github",
-             "-f", "bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best[height<=1080]"],
+             "-f", "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best[height<=720]"],
             ["--js-runtimes", deno_rt, "--impersonate", "chrome", "--extractor-args", "youtube:player_client=ios,web",
              "-f", base_fmt],
         ] + strategies
@@ -168,8 +172,28 @@ def download_video(url, job_dir, progress_cb=None):
                 last_err = str(e)
                 time.sleep(3)
                 continue
-            # Stream stderr to report live download progress
+            # Stream stderr for live download %; scan stdout (which yt-dlp uses for
+            # the "[Merger] Merging formats" message) in a background thread so we
+            # can surface a "merging" stage while the post-download merge runs.
             last_line = ""
+            merging_emitted = [False]
+            stdout_buf = []
+
+            def _scan_stdout():
+                try:
+                    for ln in proc.stdout:
+                        stdout_buf.append(ln)
+                        if status_cb and not merging_emitted[0] and ("Merg" in ln or "erge" in ln):
+                            merging_emitted[0] = True
+                            try:
+                                status_cb("merging", progress=99)
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+            _t = threading.Thread(target=_scan_stdout, daemon=True)
+            _t.start()
             while True:
                 line = proc.stderr.readline()
                 if not line:
@@ -181,6 +205,13 @@ def download_video(url, job_dir, progress_cb=None):
                         progress_cb(min(99.0, float(m.group(1))))
                     except (ValueError, TypeError):
                         pass
+                if status_cb and not merging_emitted[0] and ("Merger" in line or "Merging formats" in line):
+                    merging_emitted[0] = True
+                    try:
+                        status_cb("merging", progress=99)
+                    except Exception:
+                        pass
+            _t.join()
             try:
                 proc.wait(timeout=600)
             except subprocess.TimeoutExpired:
@@ -192,7 +223,7 @@ def download_video(url, job_dir, progress_cb=None):
                 last_err = last_line.strip()
                 time.sleep(3)
                 continue
-            out = (proc.stdout.read() or "").strip()
+            out = "".join(stdout_buf).strip()
             lines = [l for l in out.split("\n") if l.strip()]
             filename = lines[-2].strip() if len(lines) >= 2 else None
             title = lines[-1].strip() if len(lines) >= 2 else "video"
@@ -939,6 +970,7 @@ def process_video(url, api_key, clip_count=6, callback=None, job_id=None, local_
             video_path, title = download_video(
                 url, job_dir,
                 progress_cb=lambda p: emit("downloading", progress=p),
+                status_cb=lambda s, **kw: emit(s, **kw),
             )
             emit("downloaded", title=title, progress=15)
 

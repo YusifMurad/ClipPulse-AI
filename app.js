@@ -372,6 +372,7 @@ const STATUS_KEYS = {
   analyzing: "status_analyzing",
   moments_found: "status_moments_found",
   retrying: "status_retrying",
+  merging: "status_merging",
   cutting_clip: "status_cutting_clip",
   done: "progress_done",
   error: "progress_error",
