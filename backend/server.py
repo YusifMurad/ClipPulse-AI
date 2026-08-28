@@ -487,6 +487,11 @@ def translations():
     return send_file(str(FRONTEND_DIR / "translations.js"))
 
 
+@app.route("/fonts/<path:filename>")
+def serve_font(filename):
+    return send_file(str(FRONTEND_DIR / "fonts" / filename))
+
+
 @app.route("/api/cleanup", methods=["POST"])
 def manual_cleanup():
     n = clean_disk()

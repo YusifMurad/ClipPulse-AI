@@ -1,3 +1,11 @@
+/* Self-hosted Poppins (no external dependency) */
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 400; src: url('/fonts/Poppins-Regular.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 500; src: url('/fonts/Poppins-Medium.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 600; src: url('/fonts/Poppins-SemiBold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 700; src: url('/fonts/Poppins-Bold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 800; src: url('/fonts/Poppins-ExtraBold.ttf') format('truetype'); font-display: swap; }
+@font-face { font-family: 'Poppins'; font-style: normal; font-weight: 900; src: url('/fonts/Poppins-Black.ttf') format('truetype'); font-display: swap; }
+
 * {
   margin: 0;
   padding: 0;
@@ -5,31 +13,46 @@
 }
 
 :root {
-  --bg-base: #09090b;
-  --bg-elevated: #111113;
-  --bg-highlight: #18181b;
-  --bg-card: #141416;
-  --bg-card-hover: #1e1e22;
+  --bg-base: #08080a;
+  --bg-elevated: #101012;
+  --bg-highlight: #161619;
+  --bg-card: #121214;
+  --bg-card-hover: #1b1b1f;
   --text-primary: #fafafa;
   --text-secondary: #a1a1aa;
-  --text-muted: #52525b;
+  --text-muted: #6b6b74;
   --accent: #1db954;
-  --accent-hover: #1ed760;
-  --accent-glow: rgba(29, 185, 84, 0.15);
+  --accent-hover: #25d366;
+  --accent-soft: rgba(29, 185, 84, 0.12);
+  --accent-glow: rgba(29, 185, 84, 0.18);
   --danger: #ef4444;
   --danger-glow: rgba(239, 68, 68, 0.12);
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.1);
-  --glass: rgba(255, 255, 255, 0.03);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --glass: rgba(255, 255, 255, 0.04);
+  --radius: 14px;
+  --radius-sm: 10px;
   --radius-pill: 500px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 40px rgba(29, 185, 84, 0.08);
-  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 48px rgba(29, 185, 84, 0.1);
+  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --font: 'Poppins', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
+::selection { background: rgba(29, 185, 84, 0.3); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-card-hover); border-radius: 8px; border: 2px solid var(--bg-base); }
+::-webkit-scrollbar-thumb:hover { background: #2a2a30; }
 
 html, body {
   height: 100%;
@@ -37,11 +60,15 @@ html, body {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background: var(--bg-base);
+  font-family: var(--font);
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(29, 185, 84, 0.06), transparent 60%),
+    radial-gradient(1000px 500px at -10% 110%, rgba(29, 185, 84, 0.04), transparent 60%),
+    var(--bg-base);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  letter-spacing: 0.1px;
 }
 
 #app {
@@ -55,7 +82,7 @@ body {
 /* ===================== SIDEBAR ===================== */
 .sidebar {
   width: 260px;
-  background: var(--bg-base);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent), var(--bg-elevated);
   display: flex;
   flex-direction: column;
   padding: 20px 12px;
@@ -137,7 +164,8 @@ body {
 
 .nav-btn.active {
   color: var(--text-primary);
-  background: var(--bg-highlight);
+  background: var(--accent-soft);
+  font-weight: 600;
 }
 
 .nav-btn.active::before {
@@ -359,12 +387,12 @@ body {
 
 .btn-primary:hover {
   background: var(--accent-hover);
-  transform: scale(1.03);
-  box-shadow: 0 0 30px rgba(29, 185, 84, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(29, 185, 84, 0.35);
 }
 
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
 .btn-primary:disabled {
@@ -570,9 +598,9 @@ body {
 }
 
 .clip-card:hover {
-  border-color: var(--border-strong);
+  border-color: rgba(29, 185, 84, 0.35);
   transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
 }
 
 .clip-card video {
@@ -1260,7 +1288,7 @@ h2 {
 
 .sub-preview {
   text-align: center;
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font);
   font-weight: 800;
   line-height: 1.25;
   max-width: 100%;
