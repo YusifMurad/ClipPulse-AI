@@ -9,6 +9,8 @@ ClipPulse is fully cross-platform — the same code runs on Linux, macOS, and Wi
 
 > 📘 **New here?** Full step-by-step tutorial (install, Gemini key, your first clip in 5 min): <https://docs.google.com/document/d/1FJCDa0gOhb5WGHNZhXCejX3ShV1lMpiTg2txsd16T5c/edit?tab=t.0#heading=h.o4q50hf8bf2>
 
+[![Support on Patreon](https://img.shields.io/badge/Patreon-Support-orange?logo=patreon&style=for-the-badge)](https://www.patreon.com/ClipPulse-AI)
+
 ---
 
 ## 1. What you need

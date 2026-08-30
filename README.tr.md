@@ -8,6 +8,7 @@
 [![Yıldız](https://img.shields.io/github/stars/YusifMurad/ClipPulse-AI?style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/stargazers)
 [![Discussions](https://img.shields.io/badge/Discussions-aktif-purple?logo=github&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/discussions)
 [![Docker](https://img.shields.io/badge/Docker-hazır-blue?logo=docker&style=for-the-badge)](https://github.com/YusifMurad/ClipPulse-AI/pkgs/container/clippulse-ai)
+[![Patreon](https://img.shields.io/badge/Patreon-Support-orange?logo=patreon&style=for-the-badge)](https://www.patreon.com/ClipPulse-AI)
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/5ae92a0d-b851-48d2-a31d-a771aaf24488" alt="ClipPulse AI Ekran Görüntüsü" width="900">
